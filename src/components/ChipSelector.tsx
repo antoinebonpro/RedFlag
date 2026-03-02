@@ -1,0 +1,66 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { C } from '../constants/theme';
+
+interface Option<T extends string> {
+  value: T;
+  label: string;
+}
+
+interface ChipSelectorProps<T extends string> {
+  options: Option<T>[];
+  selected: T | null;
+  onSelect: (value: T | null) => void;
+}
+
+export function ChipSelector<T extends string>({
+  options,
+  selected,
+  onSelect,
+}: ChipSelectorProps<T>) {
+  return (
+    <View style={styles.wrap}>
+      {options.map((option) => {
+        const isActive = selected === option.value;
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={[styles.chip, isActive && styles.chipActive]}
+            onPress={() => onSelect(isActive ? null : option.value)}
+            activeOpacity={0.65}
+          >
+            <Text style={[styles.text, isActive && styles.textActive]}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: C.rFull,
+    backgroundColor: C.bgChip,
+  },
+  chipActive: {
+    backgroundColor: C.red,
+  },
+  text: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: C.textSecondary,
+  },
+  textActive: {
+    color: C.textOnRed,
+    fontWeight: '700',
+  },
+});

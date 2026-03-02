@@ -1,0 +1,74 @@
+import { SourceStat } from '../types';
+
+export const SOURCES: SourceStat[] = [
+  {
+    critere: 'Population par genre',
+    source: 'INSEE — Bilan démographique',
+    annee: '2024',
+    url: 'https://www.insee.fr/fr/statistiques/2381472',
+    note: 'Population totale France : 68,4M (33,2M hommes, 35,2M femmes)',
+  },
+  {
+    critere: 'Âge',
+    source: 'INSEE — Pyramide des âges',
+    annee: '2024',
+    url: 'https://www.insee.fr/fr/statistiques/2381474',
+    note: 'Répartition de la population par tranche d\'âge quinquennale et par sexe',
+  },
+  {
+    critere: 'Taille',
+    source: 'DREES — Études et résultats n°1287',
+    annee: '2023',
+    url: 'https://drees.solidarites-sante.gouv.fr/',
+    note: 'Taille moyenne adulte : hommes 176 cm (σ=7), femmes 163 cm (σ=6,5). Distribution normale.',
+  },
+  {
+    critere: 'Diplôme',
+    source: 'INSEE — Niveau de diplôme selon le sexe',
+    annee: '2021',
+    url: 'https://www.insee.fr/fr/statistiques/2416872',
+    note: 'Population 25–64 ans. Niveaux : sans diplôme, brevet, CAP/BEP, bac, bac+2, bac+3/4, bac+5+.',
+  },
+  {
+    critere: 'Couleur de cheveux',
+    source: 'Études anthropologiques européennes',
+    annee: '2019',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/',
+    note: 'Estimations pour la population française adulte. Inclut les cheveux naturels et grisonnants.',
+  },
+  {
+    critere: 'Couleur des yeux',
+    source: 'INED — Enquête démographique santé',
+    annee: '2020',
+    url: 'https://www.ined.fr/',
+    note: 'Distribution : marron ~60%, bleu ~20%, vert ~10%, noisette ~7%, gris ~3% (France).',
+  },
+  {
+    critere: 'Salaire',
+    source: 'INSEE — Distribution des salaires nets',
+    annee: '2022',
+    url: 'https://www.insee.fr/fr/statistiques/6436313',
+    note: 'Salaire net mensuel médian : hommes ~2 100 €, femmes ~1 800 €. Distribution log-normale.',
+  },
+  {
+    critere: 'Tabac',
+    source: 'Santé publique France — Baromètre santé',
+    annee: '2023',
+    url: 'https://www.santepubliquefrance.fr/',
+    note: 'Prévalence du tabagisme quotidien : hommes 28%, femmes 23%.',
+  },
+  {
+    critere: 'Situation conjugale',
+    source: 'INSEE — État matrimonial des personnes',
+    annee: '2021',
+    url: 'https://www.insee.fr/fr/statistiques/2381498',
+    note: 'Population 18–64 ans : célibataires, en couple, mariés, divorcés — par sexe.',
+  },
+  {
+    critere: 'Pratique sportive',
+    source: 'INJEP — Baromètre national des pratiques sportives',
+    annee: '2022',
+    url: 'https://injep.fr/publication/barometre-national-des-pratiques-sportives/',
+    note: '65% des adultes pratiquent une activité sportive. Répartition par fréquence et par sexe.',
+  },
+];
