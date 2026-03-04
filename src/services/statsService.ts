@@ -7,22 +7,35 @@ import {
   Fumeur,
   Situation,
   FrequenceSport,
+  Enfants,
+  Logement,
+  Animaux,
+  Ville,
 } from '../types';
 
 // ============================================================
-//  POPULATION — INSEE Bilan démographique 2024
+//  POPULATION PAR VILLE — INSEE 2023 (18-64 ans)
 // ============================================================
 
-const POPULATION_HOMMES = 33_200_000;
-const POPULATION_FEMMES = 35_200_000;
+const POPULATION_VILLE: Record<Ville, Record<Genre, number>> = {
+  france:      { homme: 33_200_000, femme: 35_200_000 },
+  paris:       { homme: 3_600_000,  femme: 3_900_000  },
+  lyon:        { homme: 670_000,    femme: 730_000    },
+  marseille:   { homme: 540_000,    femme: 560_000    },
+  toulouse:    { homme: 415_000,    femme: 435_000    },
+  bordeaux:    { homme: 370_000,    femme: 390_000    },
+  nantes:      { homme: 295_000,    femme: 315_000    },
+  lille:       { homme: 350_000,    femme: 370_000    },
+  nice:        { homme: 178_000,    femme: 192_000    },
+  strasbourg:  { homme: 237_000,    femme: 253_000    },
+};
 
-export function getPopulationGenre(genre: Genre): number {
-  return genre === 'homme' ? POPULATION_HOMMES : POPULATION_FEMMES;
+export function getPopulationVille(ville: Ville, genre: Genre): number {
+  return POPULATION_VILLE[ville][genre];
 }
 
 // ============================================================
 //  ÂGE — INSEE Pyramide des âges 2024
-//  Part de chaque tranche parmi les 18-64 ans, par sexe
 // ============================================================
 
 const AGE_DISTRIBUTION: Record<Genre, Record<TrancheAge, number>> = {
@@ -88,22 +101,22 @@ export function getProbabiliteTaille(
 
 const DIPLOME_DISTRIBUTION: Record<Genre, Record<NiveauDiplome, number>> = {
   homme: {
-    sans_diplome: 0.12,
-    brevet: 0.06,
-    cap_bep: 0.22,
-    bac: 0.16,
-    bac_plus_2: 0.13,
-    bac_plus_3_4: 0.13,
-    bac_plus_5_plus: 0.18,
+    sans_diplome:   0.12,
+    brevet:         0.06,
+    cap_bep:        0.22,
+    bac:            0.16,
+    bac_plus_2:     0.13,
+    bac_plus_3_4:   0.13,
+    bac_plus_5_plus:0.18,
   },
   femme: {
-    sans_diplome: 0.11,
-    brevet: 0.06,
-    cap_bep: 0.17,
-    bac: 0.17,
-    bac_plus_2: 0.13,
-    bac_plus_3_4: 0.16,
-    bac_plus_5_plus: 0.20,
+    sans_diplome:   0.11,
+    brevet:         0.06,
+    cap_bep:        0.17,
+    bac:            0.17,
+    bac_plus_2:     0.13,
+    bac_plus_3_4:   0.16,
+    bac_plus_5_plus:0.20,
   },
 };
 
@@ -120,20 +133,20 @@ export function getProbabiliteDiplome(
 
 const CHEVEUX_DISTRIBUTION: Record<Genre, Record<CouleurCheveux, number>> = {
   homme: {
-    brun: 0.25,
-    chatain: 0.30,
-    blond: 0.15,
-    roux: 0.04,
-    noir: 0.12,
-    gris_blanc: 0.14,
+    brun:      0.25,
+    chatain:   0.30,
+    blond:     0.15,
+    roux:      0.04,
+    noir:      0.12,
+    gris_blanc:0.14,
   },
   femme: {
-    brun: 0.22,
-    chatain: 0.32,
-    blond: 0.20,
-    roux: 0.05,
-    noir: 0.11,
-    gris_blanc: 0.10,
+    brun:      0.22,
+    chatain:   0.32,
+    blond:     0.20,
+    roux:      0.05,
+    noir:      0.11,
+    gris_blanc:0.10,
   },
 };
 
@@ -150,18 +163,18 @@ export function getProbabiliteCheveux(
 
 const YEUX_DISTRIBUTION: Record<Genre, Record<CouleurYeux, number>> = {
   homme: {
-    marron: 0.58,
-    bleu: 0.22,
-    vert: 0.09,
-    noisette: 0.07,
-    gris: 0.04,
+    marron:  0.58,
+    bleu:    0.22,
+    vert:    0.09,
+    noisette:0.07,
+    gris:    0.04,
   },
   femme: {
-    marron: 0.61,
-    bleu: 0.19,
-    vert: 0.11,
-    noisette: 0.06,
-    gris: 0.03,
+    marron:  0.61,
+    bleu:    0.19,
+    vert:    0.11,
+    noisette:0.06,
+    gris:    0.03,
   },
 };
 
@@ -218,15 +231,15 @@ export function getProbabiliteFumeur(genre: Genre, fumeur: Fumeur): number {
 const SITUATION_DISTRIBUTION: Record<Genre, Record<Situation, number>> = {
   homme: {
     celibataire: 0.38,
-    en_couple: 0.15,
-    marie: 0.40,
-    divorce: 0.07,
+    en_couple:   0.15,
+    marie:       0.40,
+    divorce:     0.07,
   },
   femme: {
     celibataire: 0.30,
-    en_couple: 0.15,
-    marie: 0.42,
-    divorce: 0.13,
+    en_couple:   0.15,
+    marie:       0.42,
+    divorce:     0.13,
   },
 };
 
@@ -243,16 +256,16 @@ export function getProbabiliteSituation(
 
 const SPORT_DISTRIBUTION: Record<Genre, Record<FrequenceSport, number>> = {
   homme: {
-    jamais: 0.28,
-    occasionnel: 0.25,
-    regulier: 0.30,
-    intensif: 0.17,
+    jamais:     0.28,
+    occasionnel:0.25,
+    regulier:   0.30,
+    intensif:   0.17,
   },
   femme: {
-    jamais: 0.35,
-    occasionnel: 0.28,
-    regulier: 0.27,
-    intensif: 0.10,
+    jamais:     0.35,
+    occasionnel:0.28,
+    regulier:   0.27,
+    intensif:   0.10,
   },
 };
 
@@ -261,4 +274,67 @@ export function getProbabiliteSport(
   sport: FrequenceSport,
 ): number {
   return SPORT_DISTRIBUTION[genre][sport];
+}
+
+// ============================================================
+//  ENFANTS — INSEE 2021 (adultes 18-64 ans)
+// ============================================================
+
+const ENFANTS_DISTRIBUTION: Record<Genre, Record<Enfants, number>> = {
+  homme: {
+    aucun: 0.40,
+    en_a:  0.60,
+  },
+  femme: {
+    aucun: 0.35,
+    en_a:  0.65,
+  },
+};
+
+export function getProbabiliteEnfants(genre: Genre, enfants: Enfants): number {
+  return ENFANTS_DISTRIBUTION[genre][enfants];
+}
+
+// ============================================================
+//  LOGEMENT — INSEE 2023 (adultes 18-64 ans)
+// ============================================================
+
+const LOGEMENT_DISTRIBUTION: Record<Genre, Record<Logement, number>> = {
+  homme: {
+    proprietaire: 0.43,
+    locataire:    0.41,
+    chez_parents: 0.11,
+    colocation:   0.05,
+  },
+  femme: {
+    proprietaire: 0.41,
+    locataire:    0.44,
+    chez_parents: 0.09,
+    colocation:   0.06,
+  },
+};
+
+export function getProbabiliteLogement(genre: Genre, logement: Logement): number {
+  return LOGEMENT_DISTRIBUTION[genre][logement];
+}
+
+// ============================================================
+//  ANIMAUX — FACCO / GfK 2023
+// ============================================================
+
+const ANIMAUX_DISTRIBUTION: Record<Genre, Record<Animaux, number>> = {
+  homme: {
+    chien: 0.20,
+    chat:  0.28,
+    aucun: 0.52,
+  },
+  femme: {
+    chien: 0.22,
+    chat:  0.33,
+    aucun: 0.45,
+  },
+};
+
+export function getProbabiliteAnimaux(genre: Genre, animaux: Animaux): number {
+  return ANIMAUX_DISTRIBUTION[genre][animaux];
 }

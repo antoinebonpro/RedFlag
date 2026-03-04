@@ -6,6 +6,10 @@ import {
   Fumeur,
   Situation,
   FrequenceSport,
+  Enfants,
+  Logement,
+  Animaux,
+  Ville,
 } from '../types';
 
 export const AGE_LABELS: Record<TrancheAge, string> = {
@@ -60,6 +64,37 @@ export const SPORT_LABELS: Record<FrequenceSport, string> = {
   occasionnel: 'Occasionnel',
   regulier: 'Régulier',
   intensif: 'Intensif',
+};
+
+export const ENFANTS_LABELS: Record<Enfants, string> = {
+  aucun: 'Sans enfant',
+  en_a: 'A des enfants',
+};
+
+export const LOGEMENT_LABELS: Record<Logement, string> = {
+  locataire: 'Locataire',
+  proprietaire: 'Propriétaire',
+  chez_parents: 'Chez ses parents',
+  colocation: 'En colocation',
+};
+
+export const ANIMAUX_LABELS: Record<Animaux, string> = {
+  chien: '🐕 Chien',
+  chat: '🐈 Chat',
+  aucun: 'Sans animal',
+};
+
+export const VILLE_LABELS: Record<Ville, string> = {
+  france: '🇫🇷 France entière',
+  paris: '🗼 Paris',
+  lyon: '🦁 Lyon',
+  marseille: '☀️ Marseille',
+  toulouse: '🌸 Toulouse',
+  bordeaux: '🍷 Bordeaux',
+  nantes: '🐘 Nantes',
+  lille: '🌻 Lille',
+  nice: '🌊 Nice',
+  strasbourg: '🎄 Strasbourg',
 };
 
 export const TRANCHES_TAILLE = [

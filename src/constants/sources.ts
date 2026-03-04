@@ -71,4 +71,25 @@ export const SOURCES: SourceStat[] = [
     url: 'https://injep.fr/publication/barometre-national-des-pratiques-sportives/',
     note: '65% des adultes pratiquent une activité sportive. Répartition par fréquence et par sexe.',
   },
+  {
+    critere: 'Enfants',
+    source: 'INSEE — Enquête emploi du temps',
+    annee: '2021',
+    url: 'https://www.insee.fr/fr/statistiques/2415184',
+    note: 'Environ 40% des hommes et 35% des femmes de 18–64 ans n\'ont pas d\'enfant.',
+  },
+  {
+    critere: 'Logement',
+    source: 'INSEE — Enquête logement',
+    annee: '2023',
+    url: 'https://www.insee.fr/fr/statistiques/7634202',
+    note: 'Statuts d\'occupation : propriétaires ~43% H / 41% F, locataires ~41% H / 44% F, chez les parents ~10%, colocation ~5%.',
+  },
+  {
+    critere: 'Animaux de compagnie',
+    source: 'FACCO / GfK — Enquête nationale',
+    annee: '2023',
+    url: 'https://www.facco.fr/chiffres-cles/',
+    note: 'Environ 49% des foyers français possèdent un animal. Chats (15,1M) et chiens (7,5M) sont les plus répandus.',
+  },
 ];

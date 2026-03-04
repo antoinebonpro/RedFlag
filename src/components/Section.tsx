@@ -5,17 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import { C } from '../constants/theme';
-
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface SectionProps {
   icon: string;

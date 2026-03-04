@@ -116,22 +116,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   disclaimer: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: C.warningBg,
     borderRadius: C.r12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: C.warningBorder,
     gap: 6,
     marginTop: 4,
   },
   disclaimerTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#92400E',
+    color: C.warningTitle,
   },
   disclaimerText: {
     fontSize: 13,
-    color: '#A16207',
+    color: C.warningText,
     lineHeight: 19,
   },
 });

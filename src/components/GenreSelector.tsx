@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Genre } from '../types';
-import { C } from '../constants/theme';
+import { C, S } from '../constants/theme';
 
 interface GenreSelectorProps {
   selected: Genre;
@@ -40,7 +40,7 @@ function Tab({
 }) {
   return (
     <TouchableOpacity
-      style={[styles.tab, active && styles.tabActive]}
+      style={[styles.tab, active && styles.tabActive, active && S.subtleCard]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -67,11 +67,6 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     backgroundColor: C.bg,
-    shadowColor: C.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
   },
   emoji: {
     fontSize: 26,

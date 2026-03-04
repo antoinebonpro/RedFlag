@@ -1,4 +1,4 @@
-import { CriteriaSelection, ResultatCalcul, DetailCritere } from '../types';
+import { CriteriaSelection, ResultatCalcul, DetailCritere, Ville } from '../types';
 import {
   AGE_LABELS,
   DIPLOME_LABELS,
@@ -7,9 +7,12 @@ import {
   FUMEUR_LABELS,
   SITUATION_LABELS,
   SPORT_LABELS,
+  ENFANTS_LABELS,
+  LOGEMENT_LABELS,
+  ANIMAUX_LABELS,
 } from '../constants/labels';
 import {
-  getPopulationGenre,
+  getPopulationVille,
   getProbabiliteAge,
   getProbabiliteTaille,
   getProbabiliteDiplome,
@@ -19,9 +22,18 @@ import {
   getProbabiliteFumeur,
   getProbabiliteSituation,
   getProbabiliteSport,
+  getProbabiliteEnfants,
+  getProbabiliteLogement,
+  getProbabiliteAnimaux,
 } from './statsService';
 
-export function calculerResultat(criteria: CriteriaSelection): ResultatCalcul {
+// Traits considérés comme "red flags" dans le mode profil
+const RED_FLAG_KEYS = new Set(['fumeur_oui', 'situation_marie']);
+
+export function calculerResultat(
+  criteria: CriteriaSelection,
+  ville: Ville = 'france',
+): ResultatCalcul {
   const {
     genre,
     age,
@@ -33,116 +45,125 @@ export function calculerResultat(criteria: CriteriaSelection): ResultatCalcul {
     fumeur,
     situation,
     sport,
+    enfants,
+    logement,
+    animaux,
   } = criteria;
 
   const details: DetailCritere[] = [];
   let probabiliteTotale = 1;
 
-  // Âge
-  if (age) {
-    const p = getProbabiliteAge(genre, age);
+  function addDetail(
+    label: string,
+    p: number,
+    source: string,
+    flagKey?: string,
+  ) {
     probabiliteTotale *= p;
     details.push({
-      label: AGE_LABELS[age],
+      label,
       pourcentage: p * 100,
-      source: 'INSEE 2024',
+      source,
+      isRedFlag: flagKey ? RED_FLAG_KEYS.has(flagKey) || p < 0.08 : false,
     });
   }
 
-  // Taille
+  if (age) {
+    addDetail(AGE_LABELS[age], getProbabiliteAge(genre, age), 'INSEE 2024');
+  }
+
   if (taille) {
     const p = getProbabiliteTaille(genre, taille.min, taille.max);
-    probabiliteTotale *= p;
-    details.push({
-      label: `${taille.min}–${taille.max} cm`,
-      pourcentage: p * 100,
-      source: 'DREES 2023',
-    });
+    addDetail(`${taille.min}–${taille.max} cm`, p, 'DREES 2023');
   }
 
-  // Diplôme
   if (diplome) {
-    const p = getProbabiliteDiplome(genre, diplome);
-    probabiliteTotale *= p;
-    details.push({
-      label: DIPLOME_LABELS[diplome],
-      pourcentage: p * 100,
-      source: 'INSEE 2021',
-    });
+    addDetail(
+      DIPLOME_LABELS[diplome],
+      getProbabiliteDiplome(genre, diplome),
+      'INSEE 2021',
+      `diplome_${diplome}`,
+    );
   }
 
-  // Cheveux
   if (couleurCheveux) {
-    const p = getProbabiliteCheveux(genre, couleurCheveux);
-    probabiliteTotale *= p;
-    details.push({
-      label: `Cheveux ${CHEVEUX_LABELS[couleurCheveux].toLowerCase()}`,
-      pourcentage: p * 100,
-      source: 'Études anthro. 2019',
-    });
+    addDetail(
+      `Cheveux ${CHEVEUX_LABELS[couleurCheveux].toLowerCase()}`,
+      getProbabiliteCheveux(genre, couleurCheveux),
+      'Études anthro. 2019',
+    );
   }
 
-  // Yeux
   if (couleurYeux) {
-    const p = getProbabiliteYeux(genre, couleurYeux);
-    probabiliteTotale *= p;
-    details.push({
-      label: `Yeux ${YEUX_LABELS[couleurYeux].toLowerCase()}`,
-      pourcentage: p * 100,
-      source: 'INED 2020',
-    });
+    addDetail(
+      `Yeux ${YEUX_LABELS[couleurYeux].toLowerCase()}`,
+      getProbabiliteYeux(genre, couleurYeux),
+      'INED 2020',
+    );
   }
 
-  // Salaire
   if (salaire) {
     const p = getProbabiliteSalaire(genre, salaire.min, salaire.max);
-    probabiliteTotale *= p;
     const salaireLabel =
       salaire.max >= 999999
         ? `> ${salaire.min.toLocaleString('fr-FR')} €`
         : `${salaire.min.toLocaleString('fr-FR')}–${salaire.max.toLocaleString('fr-FR')} €`;
-    details.push({
-      label: salaireLabel,
-      pourcentage: p * 100,
-      source: 'INSEE 2022',
-    });
+    addDetail(salaireLabel, p, 'INSEE 2022', `salaire_${salaire.min}`);
   }
 
-  // Tabac
   if (fumeur) {
-    const p = getProbabiliteFumeur(genre, fumeur);
-    probabiliteTotale *= p;
-    details.push({
-      label: FUMEUR_LABELS[fumeur],
-      pourcentage: p * 100,
-      source: 'SPF 2023',
-    });
+    addDetail(
+      FUMEUR_LABELS[fumeur],
+      getProbabiliteFumeur(genre, fumeur),
+      'SPF 2023',
+      `fumeur_${fumeur}`,
+    );
   }
 
-  // Situation
   if (situation) {
-    const p = getProbabiliteSituation(genre, situation);
-    probabiliteTotale *= p;
-    details.push({
-      label: SITUATION_LABELS[situation],
-      pourcentage: p * 100,
-      source: 'INSEE 2021',
-    });
+    addDetail(
+      SITUATION_LABELS[situation],
+      getProbabiliteSituation(genre, situation),
+      'INSEE 2021',
+      `situation_${situation}`,
+    );
   }
 
-  // Sport
   if (sport) {
-    const p = getProbabiliteSport(genre, sport);
-    probabiliteTotale *= p;
-    details.push({
-      label: SPORT_LABELS[sport],
-      pourcentage: p * 100,
-      source: 'INJEP 2022',
-    });
+    addDetail(
+      SPORT_LABELS[sport],
+      getProbabiliteSport(genre, sport),
+      'INJEP 2022',
+    );
   }
 
-  const populationGenre = getPopulationGenre(genre);
-  const nombre = Math.round(populationGenre * probabiliteTotale);
+  if (enfants) {
+    addDetail(
+      ENFANTS_LABELS[enfants],
+      getProbabiliteEnfants(genre, enfants),
+      'INSEE 2021',
+    );
+  }
+
+  if (logement) {
+    addDetail(
+      LOGEMENT_LABELS[logement],
+      getProbabiliteLogement(genre, logement),
+      'INSEE 2023',
+      `logement_${logement}`,
+    );
+  }
+
+  if (animaux) {
+    addDetail(
+      ANIMAUX_LABELS[animaux],
+      getProbabiliteAnimaux(genre, animaux),
+      'FACCO 2023',
+    );
+  }
+
+  const population = getPopulationVille(ville, genre);
+  const nombre = Math.round(population * probabiliteTotale);
 
   return {
     pourcentage: probabiliteTotale * 100,

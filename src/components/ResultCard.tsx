@@ -1,20 +1,24 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { ResultatCalcul } from '../types';
-import { C } from '../constants/theme';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Share } from 'react-native';
+import { ResultatCalcul, Ville } from '../types';
+import { VILLE_LABELS } from '../constants/labels';
+import { C, S } from '../constants/theme';
 
 interface ResultCardProps {
   resultat: ResultatCalcul;
   genre: string;
+  ville?: Ville;
+  mode?: 'recherche' | 'profil';
+  shareText?: string;
 }
 
-function formatNombre(n: number): string {
+export function formatNombre(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',')} M`;
   if (n >= 1_000) return `${Math.round(n / 1_000)} k`;
   return n.toLocaleString('fr-FR');
 }
 
-function formatPourcentage(p: number): string {
+export function formatPourcentage(p: number): string {
   if (p >= 10) return `${p.toFixed(1).replace('.', ',')}%`;
   if (p >= 1) return `${p.toFixed(2).replace('.', ',')}%`;
   if (p >= 0.01) return `${p.toFixed(3).replace('.', ',')}%`;
@@ -22,23 +26,23 @@ function formatPourcentage(p: number): string {
   return `< 0,0001%`;
 }
 
-function getVerdict(p: number): {
-  emoji: string;
-  text: string;
-  color: string;
-  bgColor: string;
-} {
-  if (p >= 30)
-    return { emoji: '😎', text: 'Très courant', color: C.green, bgColor: C.greenLight };
-  if (p >= 10)
-    return { emoji: '👍', text: 'Assez courant', color: C.green, bgColor: C.greenLight };
-  if (p >= 3)
-    return { emoji: '🤔', text: 'Pas si fréquent', color: C.yellow, bgColor: C.yellowLight };
-  if (p >= 0.5)
-    return { emoji: '😬', text: 'Plutôt rare', color: C.orange, bgColor: C.orangeLight };
-  if (p >= 0.05)
-    return { emoji: '🦄', text: 'Très exigeant', color: C.red, bgColor: C.redLight };
-  return { emoji: '💀', text: 'Quasi impossible', color: C.redDark, bgColor: C.redLight };
+type Verdict = { emoji: string; text: string; color: string; bgColor: string };
+
+function getVerdict(p: number, isProfil: boolean): Verdict {
+  if (isProfil) {
+    if (p >= 30) return { emoji: '😊', text: 'Profil très courant',  color: C.green,  bgColor: C.greenLight };
+    if (p >= 10) return { emoji: '✨', text: 'Profil assez courant', color: C.green,  bgColor: C.greenLight };
+    if (p >= 3)  return { emoji: '🦋', text: 'Profil original',      color: C.yellow, bgColor: C.yellowLight };
+    if (p >= 0.5)return { emoji: '💎', text: 'Profil rare',          color: C.indigo, bgColor: C.indigoLight };
+    if (p >= 0.05)return{ emoji: '🌟', text: 'Profil très rare',     color: C.indigo, bgColor: C.indigoLight };
+    return           { emoji: '🪐', text: 'Profil unique en France', color: C.indigo, bgColor: C.indigoLight };
+  }
+  if (p >= 30) return { emoji: '😎', text: 'Très courant',      color: C.green,   bgColor: C.greenLight };
+  if (p >= 10) return { emoji: '👍', text: 'Assez courant',     color: C.green,   bgColor: C.greenLight };
+  if (p >= 3)  return { emoji: '🤔', text: 'Pas si fréquent',   color: C.yellow,  bgColor: C.yellowLight };
+  if (p >= 0.5)return { emoji: '😬', text: 'Plutôt rare',       color: C.orange,  bgColor: C.orangeLight };
+  if (p >= 0.05)return { emoji: '🦄', text: 'Très exigeant',    color: C.red,     bgColor: C.redLight };
+  return           { emoji: '💀', text: 'Quasi impossible',     color: C.redDark, bgColor: C.redLight };
 }
 
 function getBarColor(p: number): string {
@@ -47,20 +51,76 @@ function getBarColor(p: number): string {
   return C.red;
 }
 
-export function ResultCard({ resultat, genre }: ResultCardProps) {
+async function doShare(text: string, setCopied: (v: boolean) => void) {
+  if (Platform.OS !== 'web') {
+    // Native: use React Native Share sheet
+    try {
+      await Share.share({ message: text });
+    } catch {
+      // User cancelled — no feedback needed
+    }
+    return;
+  }
+  // Web: try Web Share API, fall back to clipboard
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ text });
+      return;
+    } catch {
+      // Cancelled or unsupported — fall through
+    }
+  }
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable (non-HTTPS, etc.)
+    }
+  }
+}
+
+export function ResultCard({
+  resultat,
+  genre,
+  ville = 'france',
+  mode = 'recherche',
+  shareText,
+}: ResultCardProps) {
+  const [copied, setCopied] = useState(false);
   const { pourcentage, nombre, details } = resultat;
   const genreLabel = genre === 'homme' ? 'hommes' : 'femmes';
-  const verdict = getVerdict(pourcentage);
+  const isProfil = mode === 'profil';
+  const verdict = getVerdict(pourcentage, isProfil);
+  const villeLabel =
+    ville === 'france'
+      ? 'en France'
+      : `à ${VILLE_LABELS[ville].replace(/^[^\s]+\s/, '')}`;
+
+  const subtitleText = isProfil
+    ? `des ${genreLabel} ${villeLabel} te ressemblent`
+    : `des ${genreLabel} ${villeLabel}`;
+
+  const defaultShareText =
+    `🚩 RedFlag\n` +
+    `${isProfil ? 'Mon profil' : 'Mes critères'} : ${details.map((d) => d.label).join(', ')}\n` +
+    `→ ${formatPourcentage(pourcentage)} des ${genreLabel} ${villeLabel} ${verdict.emoji}`;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, S.card]} accessibilityRole="summary">
       {/* Verdict */}
       <View style={styles.verdictSection}>
-        <Text style={styles.verdictEmoji}>{verdict.emoji}</Text>
-        <Text style={[styles.percentage, { color: verdict.color }]}>
+        <Text style={styles.verdictEmoji} accessibilityLabel={verdict.text}>
+          {verdict.emoji}
+        </Text>
+        <Text
+          style={[styles.percentage, { color: verdict.color }]}
+          accessibilityLabel={`${formatPourcentage(pourcentage)} des ${genreLabel}`}
+        >
           {formatPourcentage(pourcentage)}
         </Text>
-        <Text style={styles.subtitle}>des {genreLabel} en France</Text>
+        <Text style={styles.subtitle}>{subtitleText}</Text>
         <View style={[styles.verdictPill, { backgroundColor: verdict.bgColor }]}>
           <Text style={[styles.verdictLabel, { color: verdict.color }]}>
             {verdict.text}
@@ -69,39 +129,66 @@ export function ResultCard({ resultat, genre }: ResultCardProps) {
       </View>
 
       {/* Compteur */}
-      <View style={styles.countBox}>
+      <View
+        style={styles.countBox}
+        accessibilityLabel={`Environ ${formatNombre(nombre)} personnes`}
+      >
         <Text style={styles.countNumber}>≈ {formatNombre(nombre)}</Text>
         <Text style={styles.countLabel}>personnes</Text>
       </View>
 
-      {/* Détail */}
+      {/* Détail par critère */}
       {details.length > 0 && (
         <View style={styles.details}>
-          <Text style={styles.detailsTitle}>Détail par critère</Text>
+          <Text style={styles.detailsTitle}>
+            {isProfil ? 'Tes traits' : 'Détail par critère'}
+          </Text>
           {details.map((d, i) => (
             <View key={i} style={styles.row}>
               <View style={styles.rowTop}>
-                <Text style={styles.rowLabel}>{d.label}</Text>
+                <View style={styles.rowLabelWrap}>
+                  {isProfil && d.isRedFlag && (
+                    <Text style={styles.redFlagIcon} accessibilityLabel="red flag">
+                      🚩{' '}
+                    </Text>
+                  )}
+                  <Text style={styles.rowLabel}>{d.label}</Text>
+                </View>
                 <Text style={styles.rowValue}>
                   {d.pourcentage.toFixed(1).replace('.', ',')}%
                 </Text>
               </View>
+              {/* Flex-based bar — works on both web and native */}
               <View style={styles.barBg}>
                 <View
                   style={[
-                    styles.bar,
+                    styles.barFill,
                     {
-                      width: `${Math.min(d.pourcentage, 100)}%`,
+                      flex: Math.min(d.pourcentage, 100),
                       backgroundColor: getBarColor(d.pourcentage),
                     },
                   ]}
                 />
+                <View style={{ flex: Math.max(0, 100 - d.pourcentage) }} />
               </View>
               <Text style={styles.rowSource}>{d.source}</Text>
             </View>
           ))}
         </View>
       )}
+
+      {/* Share */}
+      <TouchableOpacity
+        style={styles.shareBtn}
+        onPress={() => doShare(shareText ?? defaultShareText, setCopied)}
+        activeOpacity={0.7}
+        accessibilityLabel="Partager ce résultat"
+        accessibilityRole="button"
+      >
+        <Text style={styles.shareBtnText}>
+          {copied ? '✓ Copié !' : '🔗 Partager ce résultat'}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -112,33 +199,21 @@ const styles = StyleSheet.create({
     borderRadius: C.r20,
     borderWidth: 1,
     borderColor: C.border,
-    shadowColor: C.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 4,
     overflow: 'hidden',
   },
-  // Verdict
   verdictSection: {
     alignItems: 'center',
     paddingTop: 32,
     paddingBottom: 24,
     paddingHorizontal: 24,
   },
-  verdictEmoji: {
-    fontSize: 48,
-    marginBottom: 4,
-  },
-  percentage: {
-    fontSize: 48,
-    fontWeight: '900',
-    letterSpacing: -2,
-  },
+  verdictEmoji: { fontSize: 48, marginBottom: 4 },
+  percentage: { fontSize: 48, fontWeight: '900', letterSpacing: -2 },
   subtitle: {
     fontSize: 15,
     color: C.textSecondary,
     marginTop: 2,
+    textAlign: 'center',
   },
   verdictPill: {
     marginTop: 14,
@@ -146,11 +221,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: C.rFull,
   },
-  verdictLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  // Count
+  verdictLabel: { fontSize: 14, fontWeight: '700' },
   countBox: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -162,17 +233,8 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 20,
   },
-  countNumber: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: C.text,
-  },
-  countLabel: {
-    fontSize: 14,
-    color: C.textSecondary,
-    fontWeight: '500',
-  },
-  // Details
+  countNumber: { fontSize: 24, fontWeight: '900', color: C.text },
+  countLabel: { fontSize: 14, color: C.textSecondary, fontWeight: '500' },
   details: {
     borderTopWidth: 1,
     borderTopColor: C.border,
@@ -189,37 +251,30 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 4,
   },
-  row: {
-    gap: 4,
-  },
+  row: { gap: 4 },
   rowTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  rowLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.text,
-  },
-  rowValue: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: C.text,
-  },
+  rowLabelWrap: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  redFlagIcon: { fontSize: 12 },
+  rowLabel: { fontSize: 14, fontWeight: '600', color: C.text, flex: 1 },
+  rowValue: { fontSize: 14, fontWeight: '800', color: C.text },
   barBg: {
     height: 6,
+    flexDirection: 'row',
     backgroundColor: C.bgChip,
     borderRadius: 3,
     overflow: 'hidden',
   },
-  bar: {
-    height: '100%',
-    borderRadius: 3,
+  barFill: { height: '100%', borderRadius: 3 },
+  rowSource: { fontSize: 11, color: C.textTertiary, fontWeight: '500' },
+  shareBtn: {
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    paddingVertical: 16,
+    alignItems: 'center',
   },
-  rowSource: {
-    fontSize: 11,
-    color: C.textTertiary,
-    fontWeight: '500',
-  },
+  shareBtnText: { fontSize: 14, color: C.indigo, fontWeight: '700' },
 });
