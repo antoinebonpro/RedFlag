@@ -18,7 +18,13 @@ import {
   SavedSearch,
   defaultCriteria,
 } from './src/types';
-import { VILLE_LABELS, TRANCHES_TAILLE, TRANCHES_SALAIRE } from './src/constants/labels';
+import {
+  VILLE_LABELS,
+  TRANCHES_TAILLE,
+  TRANCHES_SALAIRE,
+  AGE_KEYS,
+  DIPLOME_KEYS,
+} from './src/constants/labels';
 import { C, S } from './src/constants/theme';
 import { ChipSelector } from './src/components/ChipSelector';
 import { CriteriaForm } from './src/components/CriteriaForm';
@@ -44,12 +50,20 @@ const SCROLL_DELAY_MS = 200;
 function stateToSelection(c: CriteriaState): CriteriaSelection {
   return {
     genre: c.genre,
-    age: c.age,
-    taille: c.tailleIdx !== null ? TRANCHES_TAILLE[Number(c.tailleIdx)] : null,
-    diplome: c.diplome,
+    age: c.ageRange !== null
+      ? AGE_KEYS.slice(c.ageRange[0], c.ageRange[1] + 1)
+      : null,
+    taille: c.tailleRange !== null
+      ? { min: TRANCHES_TAILLE[c.tailleRange[0]].min, max: TRANCHES_TAILLE[c.tailleRange[1]].max }
+      : null,
+    diplome: c.diplomeRange !== null
+      ? DIPLOME_KEYS.slice(c.diplomeRange[0], c.diplomeRange[1] + 1)
+      : null,
     couleurCheveux: c.cheveux,
     couleurYeux: c.yeux,
-    salaire: c.salaireIdx !== null ? TRANCHES_SALAIRE[Number(c.salaireIdx)] : null,
+    salaire: c.salaireRange !== null
+      ? { min: TRANCHES_SALAIRE[c.salaireRange[0]].min, max: TRANCHES_SALAIRE[c.salaireRange[1]].max }
+      : null,
     fumeur: c.fumeur,
     situation: c.situation,
     sport: c.sport,
@@ -61,7 +75,7 @@ function stateToSelection(c: CriteriaState): CriteriaSelection {
 
 function countCriteria(c: CriteriaState): number {
   return [
-    c.age, c.tailleIdx, c.diplome, c.cheveux, c.yeux, c.salaireIdx,
+    c.ageRange, c.tailleRange, c.diplomeRange, c.cheveux, c.yeux, c.salaireRange,
     c.fumeur, c.situation, c.sport, c.enfants, c.logement, c.animaux,
   ].filter((v) => v !== null).length;
 }

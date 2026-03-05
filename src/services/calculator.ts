@@ -30,6 +30,13 @@ import {
 // Traits considérés comme "red flags" dans le mode profil
 const RED_FLAG_KEYS = new Set(['fumeur_oui', 'situation_marie']);
 
+// Génère un label lisible pour une plage de taille
+function buildTailleLabel(min: number, max: number): string {
+  if (min <= 0) return `< ${max + 1} cm`;
+  if (max >= 999) return `> ${min} cm`;
+  return `${min}–${max} cm`;
+}
+
 export function calculerResultat(
   criteria: CriteriaSelection,
   ville: Ville = 'france',
@@ -68,40 +75,74 @@ export function calculerResultat(
     });
   }
 
-  if (age) {
-    addDetail(AGE_LABELS[age], getProbabiliteAge(genre, age), 'INSEE 2024');
+  // ── Âge : somme sur les tranches sélectionnées ─────────────
+  if (age && age.length > 0) {
+    const p = Math.min(
+      age.reduce((s, t) => s + getProbabiliteAge(genre, t), 0),
+      1,
+    );
+    const label =
+      age.length === 1
+        ? AGE_LABELS[age[0]]
+        : `${AGE_LABELS[age[0]].split('–')[0]}–${
+            AGE_LABELS[age[age.length - 1]].split('–')[1] ?? AGE_LABELS[age[age.length - 1]]
+          }`;
+    addDetail(label, p, 'INSEE 2024');
   }
 
+  // ── Taille : plage continue ─────────────────────────────────
   if (taille) {
     const p = getProbabiliteTaille(genre, taille.min, taille.max);
-    addDetail(`${taille.min}–${taille.max} cm`, p, 'DREES 2023');
+    addDetail(buildTailleLabel(taille.min, taille.max), p, 'DREES 2023');
   }
 
-  if (diplome) {
+  // ── Diplôme : somme sur les niveaux sélectionnés ───────────
+  if (diplome && diplome.length > 0) {
+    const p = Math.min(
+      diplome.reduce((s, d) => s + getProbabiliteDiplome(genre, d), 0),
+      1,
+    );
+    const label =
+      diplome.length === 1
+        ? DIPLOME_LABELS[diplome[0]]
+        : `${DIPLOME_LABELS[diplome[0]]} → ${DIPLOME_LABELS[diplome[diplome.length - 1]]}`;
     addDetail(
-      DIPLOME_LABELS[diplome],
-      getProbabiliteDiplome(genre, diplome),
+      label,
+      p,
       'INSEE 2021',
-      `diplome_${diplome}`,
+      diplome.length === 1 ? `diplome_${diplome[0]}` : undefined,
     );
   }
 
-  if (couleurCheveux) {
-    addDetail(
-      `Cheveux ${CHEVEUX_LABELS[couleurCheveux].toLowerCase()}`,
-      getProbabiliteCheveux(genre, couleurCheveux),
-      'Études anthro. 2019',
+  // ── Cheveux (multi) ─────────────────────────────────────────
+  if (couleurCheveux && couleurCheveux.length > 0) {
+    const p = Math.min(
+      couleurCheveux.reduce((s, c) => s + getProbabiliteCheveux(genre, c), 0),
+      1,
     );
+    const label =
+      couleurCheveux.length === 1
+        ? `Cheveux ${CHEVEUX_LABELS[couleurCheveux[0]].toLowerCase()}`
+        : `Cheveux ${couleurCheveux
+            .map((c) => CHEVEUX_LABELS[c].toLowerCase())
+            .join(', ')}`;
+    addDetail(label, p, 'Études anthro. 2019');
   }
 
-  if (couleurYeux) {
-    addDetail(
-      `Yeux ${YEUX_LABELS[couleurYeux].toLowerCase()}`,
-      getProbabiliteYeux(genre, couleurYeux),
-      'INED 2020',
+  // ── Yeux (multi) ────────────────────────────────────────────
+  if (couleurYeux && couleurYeux.length > 0) {
+    const p = Math.min(
+      couleurYeux.reduce((s, c) => s + getProbabiliteYeux(genre, c), 0),
+      1,
     );
+    const label =
+      couleurYeux.length === 1
+        ? `Yeux ${YEUX_LABELS[couleurYeux[0]].toLowerCase()}`
+        : `Yeux ${couleurYeux.map((c) => YEUX_LABELS[c].toLowerCase()).join(', ')}`;
+    addDetail(label, p, 'INED 2020');
   }
 
+  // ── Salaire : plage continue ────────────────────────────────
   if (salaire) {
     const p = getProbabiliteSalaire(genre, salaire.min, salaire.max);
     const salaireLabel =
@@ -111,6 +152,7 @@ export function calculerResultat(
     addDetail(salaireLabel, p, 'INSEE 2022', `salaire_${salaire.min}`);
   }
 
+  // ── Fumeur (unique) ─────────────────────────────────────────
   if (fumeur) {
     addDetail(
       FUMEUR_LABELS[fumeur],
@@ -120,23 +162,38 @@ export function calculerResultat(
     );
   }
 
-  if (situation) {
+  // ── Situation (multi) ───────────────────────────────────────
+  if (situation && situation.length > 0) {
+    const p = Math.min(
+      situation.reduce((s, sit) => s + getProbabiliteSituation(genre, sit), 0),
+      1,
+    );
+    const label =
+      situation.length === 1
+        ? SITUATION_LABELS[situation[0]]
+        : situation.map((s) => SITUATION_LABELS[s]).join(', ');
     addDetail(
-      SITUATION_LABELS[situation],
-      getProbabiliteSituation(genre, situation),
+      label,
+      p,
       'INSEE 2021',
-      `situation_${situation}`,
+      situation.length === 1 ? `situation_${situation[0]}` : undefined,
     );
   }
 
-  if (sport) {
-    addDetail(
-      SPORT_LABELS[sport],
-      getProbabiliteSport(genre, sport),
-      'INJEP 2022',
+  // ── Sport (multi) ───────────────────────────────────────────
+  if (sport && sport.length > 0) {
+    const p = Math.min(
+      sport.reduce((s, sp) => s + getProbabiliteSport(genre, sp), 0),
+      1,
     );
+    const label =
+      sport.length === 1
+        ? SPORT_LABELS[sport[0]]
+        : sport.map((s) => SPORT_LABELS[s]).join(', ');
+    addDetail(label, p, 'INJEP 2022');
   }
 
+  // ── Enfants (unique) ────────────────────────────────────────
   if (enfants) {
     addDetail(
       ENFANTS_LABELS[enfants],
@@ -145,21 +202,35 @@ export function calculerResultat(
     );
   }
 
-  if (logement) {
+  // ── Logement (multi) ────────────────────────────────────────
+  if (logement && logement.length > 0) {
+    const p = Math.min(
+      logement.reduce((s, l) => s + getProbabiliteLogement(genre, l), 0),
+      1,
+    );
+    const label =
+      logement.length === 1
+        ? LOGEMENT_LABELS[logement[0]]
+        : logement.map((l) => LOGEMENT_LABELS[l]).join(', ');
     addDetail(
-      LOGEMENT_LABELS[logement],
-      getProbabiliteLogement(genre, logement),
+      label,
+      p,
       'INSEE 2023',
-      `logement_${logement}`,
+      logement.length === 1 ? `logement_${logement[0]}` : undefined,
     );
   }
 
-  if (animaux) {
-    addDetail(
-      ANIMAUX_LABELS[animaux],
-      getProbabiliteAnimaux(genre, animaux),
-      'FACCO 2023',
+  // ── Animaux (multi) ─────────────────────────────────────────
+  if (animaux && animaux.length > 0) {
+    const p = Math.min(
+      animaux.reduce((s, a) => s + getProbabiliteAnimaux(genre, a), 0),
+      1,
     );
+    const label =
+      animaux.length === 1
+        ? ANIMAUX_LABELS[animaux[0]]
+        : animaux.map((a) => ANIMAUX_LABELS[a]).join(', ');
+    addDetail(label, p, 'FACCO 2023');
   }
 
   const population = getPopulationVille(ville, genre);

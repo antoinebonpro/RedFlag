@@ -14,34 +14,34 @@ export type Ville =
 
 export interface CriteriaState {
   genre: Genre;
-  age: TrancheAge | null;
-  tailleIdx: string | null;
-  diplome: NiveauDiplome | null;
-  cheveux: CouleurCheveux | null;
-  yeux: CouleurYeux | null;
-  salaireIdx: string | null;
+  ageRange: [number, number] | null;      // [minIdx, maxIdx] dans AGE_KEYS
+  tailleRange: [number, number] | null;   // [minIdx, maxIdx] dans TRANCHES_TAILLE
+  diplomeRange: [number, number] | null;  // [minIdx, maxIdx] dans DIPLOME_KEYS
+  cheveux: CouleurCheveux[] | null;
+  yeux: CouleurYeux[] | null;
+  salaireRange: [number, number] | null;  // [minIdx, maxIdx] dans TRANCHES_SALAIRE
   fumeur: Fumeur | null;
-  situation: Situation | null;
-  sport: FrequenceSport | null;
+  situation: Situation[] | null;
+  sport: FrequenceSport[] | null;
   enfants: Enfants | null;
-  logement: Logement | null;
-  animaux: Animaux | null;
+  logement: Logement[] | null;
+  animaux: Animaux[] | null;
 }
 
 export interface CriteriaSelection {
   genre: Genre;
-  age: TrancheAge | null;
+  age: TrancheAge[] | null;
   taille: { min: number; max: number } | null;
-  diplome: NiveauDiplome | null;
-  couleurCheveux: CouleurCheveux | null;
-  couleurYeux: CouleurYeux | null;
+  diplome: NiveauDiplome[] | null;
+  couleurCheveux: CouleurCheveux[] | null;
+  couleurYeux: CouleurYeux[] | null;
   salaire: { min: number; max: number } | null;
   fumeur: Fumeur | null;
-  situation: Situation | null;
-  sport: FrequenceSport | null;
+  situation: Situation[] | null;
+  sport: FrequenceSport[] | null;
   enfants: Enfants | null;
-  logement: Logement | null;
-  animaux: Animaux | null;
+  logement: Logement[] | null;
+  animaux: Animaux[] | null;
 }
 
 export type TrancheAge = '18_24' | '25_34' | '35_44' | '45_54' | '55_64';
@@ -103,12 +103,12 @@ export interface SavedSearch {
 
 export const defaultCriteria = (genre: Genre = 'homme'): CriteriaState => ({
   genre,
-  age: null,
-  tailleIdx: null,
-  diplome: null,
+  ageRange: null,
+  tailleRange: null,
+  diplomeRange: null,
   cheveux: null,
   yeux: null,
-  salaireIdx: null,
+  salaireRange: null,
   fumeur: null,
   situation: null,
   sport: null,

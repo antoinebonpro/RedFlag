@@ -12,6 +12,18 @@ import {
   Ville,
 } from '../types';
 
+export const AGE_KEYS: TrancheAge[] = ['18_24', '25_34', '35_44', '45_54', '55_64'];
+
+export const DIPLOME_KEYS: NiveauDiplome[] = [
+  'sans_diplome',
+  'brevet',
+  'cap_bep',
+  'bac',
+  'bac_plus_2',
+  'bac_plus_3_4',
+  'bac_plus_5_plus',
+];
+
 export const AGE_LABELS: Record<TrancheAge, string> = {
   '18_24': '18–24 ans',
   '25_34': '25–34 ans',

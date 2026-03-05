@@ -2,8 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {
   CriteriaState,
-  TrancheAge,
-  NiveauDiplome,
   CouleurCheveux,
   CouleurYeux,
   Fumeur,
@@ -16,7 +14,9 @@ import {
 } from '../types';
 import {
   AGE_LABELS,
+  AGE_KEYS,
   DIPLOME_LABELS,
+  DIPLOME_KEYS,
   CHEVEUX_LABELS,
   YEUX_LABELS,
   FUMEUR_LABELS,
@@ -31,33 +31,47 @@ import {
 import { C } from '../constants/theme';
 import { GenreSelector } from './GenreSelector';
 import { ChipSelector } from './ChipSelector';
+import { DualSlider } from './DualSlider';
+import { MultiChipSelector } from './MultiChipSelector';
 import { Section } from './Section';
 
+// ── Pre-built label arrays for DualSlider ───────────────────────
+const TAILLE_LABELS  = TRANCHES_TAILLE.map((t) => t.label);
+const SALAIRE_LABELS = TRANCHES_SALAIRE.map((s) => s.label);
+const AGE_SLIDER_LABELS    = AGE_KEYS.map((k) => AGE_LABELS[k]);
+const DIPLOME_SLIDER_LABELS = DIPLOME_KEYS.map((k) => DIPLOME_LABELS[k]);
+
+// ── Multi-chip option arrays ─────────────────────────────────────
 const toOpts = <T extends string>(labels: Record<T, string>) =>
   (Object.entries(labels) as [T, string][]).map(([value, label]) => ({
     value,
     label,
   }));
 
-const AGE_OPTIONS = toOpts(AGE_LABELS);
-const DIPLOME_OPTIONS = toOpts(DIPLOME_LABELS);
-const CHEVEUX_OPTIONS = toOpts(CHEVEUX_LABELS);
-const YEUX_OPTIONS = toOpts(YEUX_LABELS);
-const FUMEUR_OPTIONS = toOpts(FUMEUR_LABELS);
+const CHEVEUX_OPTIONS  = toOpts(CHEVEUX_LABELS);
+const YEUX_OPTIONS     = toOpts(YEUX_LABELS);
+const FUMEUR_OPTIONS   = toOpts(FUMEUR_LABELS);
 const SITUATION_OPTIONS = toOpts(SITUATION_LABELS);
-const SPORT_OPTIONS = toOpts(SPORT_LABELS);
-const ENFANTS_OPTIONS = toOpts(ENFANTS_LABELS);
+const SPORT_OPTIONS    = toOpts(SPORT_LABELS);
+const ENFANTS_OPTIONS  = toOpts(ENFANTS_LABELS);
 const LOGEMENT_OPTIONS = toOpts(LOGEMENT_LABELS);
-const ANIMAUX_OPTIONS = toOpts(ANIMAUX_LABELS);
+const ANIMAUX_OPTIONS  = toOpts(ANIMAUX_LABELS);
 
-const TAILLE_OPTIONS = TRANCHES_TAILLE.map((t, i) => ({
-  value: String(i),
-  label: t.label,
-}));
-const SALAIRE_OPTIONS = TRANCHES_SALAIRE.map((s, i) => ({
-  value: String(i),
-  label: s.label,
-}));
+// ── rangeLabel helpers ───────────────────────────────────────────
+
+/** "18–24 ans" + "35–44 ans" → "18–44 ans" */
+function agePillLabel(a: string, b: string): string {
+  if (a === b) return a;
+  const start = a.split('–')[0] ?? a;           // "18"
+  const endFull = b.split('–')[1] ?? b;          // "44 ans"
+  return `${start}–${endFull}`;
+}
+
+function arrowLabel(a: string, b: string): string {
+  return a === b ? a : `${a} → ${b}`;
+}
+
+// ────────────────────────────────────────────────────────────────
 
 interface CriteriaFormProps {
   criteria: CriteriaState;
@@ -90,64 +104,75 @@ export function CriteriaForm({
       </View>
 
       <View style={styles.sections}>
+        {/* ── Apparence ── */}
         <Section
           icon="👤"
           title="Apparence"
-          badge={countFor(criteria.tailleIdx, criteria.cheveux, criteria.yeux)}
+          badge={countFor(criteria.tailleRange, criteria.cheveux, criteria.yeux)}
           defaultOpen={defaultOpenAll || !isProfilMode}
         >
           <CriteriaBlock label="Taille">
-            <ChipSelector
-              options={TAILLE_OPTIONS}
-              selected={criteria.tailleIdx}
-              onSelect={(v) => onChange({ tailleIdx: v })}
+            <DualSlider
+              count={TRANCHES_TAILLE.length}
+              range={criteria.tailleRange}
+              onRange={(r) => onChange({ tailleRange: r })}
+              labels={TAILLE_LABELS}
+              rangeLabel={arrowLabel}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Cheveux">
-            <ChipSelector
+            <MultiChipSelector
               options={CHEVEUX_OPTIONS}
               selected={criteria.cheveux}
-              onSelect={(v: CouleurCheveux | null) => onChange({ cheveux: v })}
+              onSelect={(v) => onChange({ cheveux: v as CouleurCheveux[] | null })}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Yeux">
-            <ChipSelector
+            <MultiChipSelector
               options={YEUX_OPTIONS}
               selected={criteria.yeux}
-              onSelect={(v: CouleurYeux | null) => onChange({ yeux: v })}
+              onSelect={(v) => onChange({ yeux: v as CouleurYeux[] | null })}
             />
           </CriteriaBlock>
         </Section>
 
+        {/* ── Profil ── */}
         <Section
           icon="🎓"
           title="Profil"
-          badge={countFor(criteria.age, criteria.diplome, criteria.salaireIdx)}
+          badge={countFor(criteria.ageRange, criteria.diplomeRange, criteria.salaireRange)}
           defaultOpen={defaultOpenAll}
         >
           <CriteriaBlock label="Âge">
-            <ChipSelector
-              options={AGE_OPTIONS}
-              selected={criteria.age}
-              onSelect={(v: TrancheAge | null) => onChange({ age: v })}
+            <DualSlider
+              count={AGE_KEYS.length}
+              range={criteria.ageRange}
+              onRange={(r) => onChange({ ageRange: r })}
+              labels={AGE_SLIDER_LABELS}
+              rangeLabel={agePillLabel}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Diplôme">
-            <ChipSelector
-              options={DIPLOME_OPTIONS}
-              selected={criteria.diplome}
-              onSelect={(v: NiveauDiplome | null) => onChange({ diplome: v })}
+            <DualSlider
+              count={DIPLOME_KEYS.length}
+              range={criteria.diplomeRange}
+              onRange={(r) => onChange({ diplomeRange: r })}
+              labels={DIPLOME_SLIDER_LABELS}
+              rangeLabel={arrowLabel}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Salaire net / mois">
-            <ChipSelector
-              options={SALAIRE_OPTIONS}
-              selected={criteria.salaireIdx}
-              onSelect={(v) => onChange({ salaireIdx: v })}
+            <DualSlider
+              count={TRANCHES_SALAIRE.length}
+              range={criteria.salaireRange}
+              onRange={(r) => onChange({ salaireRange: r })}
+              labels={SALAIRE_LABELS}
+              rangeLabel={arrowLabel}
             />
           </CriteriaBlock>
         </Section>
 
+        {/* ── Mode de vie ── */}
         <Section
           icon="💪"
           title="Mode de vie"
@@ -169,17 +194,17 @@ export function CriteriaForm({
             />
           </CriteriaBlock>
           <CriteriaBlock label="Situation">
-            <ChipSelector
+            <MultiChipSelector
               options={SITUATION_OPTIONS}
               selected={criteria.situation}
-              onSelect={(v: Situation | null) => onChange({ situation: v })}
+              onSelect={(v) => onChange({ situation: v as Situation[] | null })}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Sport">
-            <ChipSelector
+            <MultiChipSelector
               options={SPORT_OPTIONS}
               selected={criteria.sport}
-              onSelect={(v: FrequenceSport | null) => onChange({ sport: v })}
+              onSelect={(v) => onChange({ sport: v as FrequenceSport[] | null })}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Enfants">
@@ -190,17 +215,17 @@ export function CriteriaForm({
             />
           </CriteriaBlock>
           <CriteriaBlock label="Logement">
-            <ChipSelector
+            <MultiChipSelector
               options={LOGEMENT_OPTIONS}
               selected={criteria.logement}
-              onSelect={(v: Logement | null) => onChange({ logement: v })}
+              onSelect={(v) => onChange({ logement: v as Logement[] | null })}
             />
           </CriteriaBlock>
           <CriteriaBlock label="Animaux">
-            <ChipSelector
+            <MultiChipSelector
               options={ANIMAUX_OPTIONS}
               selected={criteria.animaux}
-              onSelect={(v: Animaux | null) => onChange({ animaux: v })}
+              onSelect={(v) => onChange({ animaux: v as Animaux[] | null })}
             />
           </CriteriaBlock>
         </Section>
