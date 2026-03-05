@@ -17,17 +17,20 @@ import {
 //  POPULATION PAR VILLE — INSEE 2023 (18-64 ans)
 // ============================================================
 
+// Populations 18-64 ans par aire d'attraction — INSEE RP 2021
+// France : 40,1 M adultes 18-64 (H 19,5 M / F 20,6 M) — corr. depuis total pop.
+// Villes  : part 18-64 ≈ 60 % de la population de l'aire d'attraction
 const POPULATION_VILLE: Record<Ville, Record<Genre, number>> = {
-  france:      { homme: 33_200_000, femme: 35_200_000 },
-  paris:       { homme: 3_600_000,  femme: 3_900_000  },
-  lyon:        { homme: 670_000,    femme: 730_000    },
-  marseille:   { homme: 540_000,    femme: 560_000    },
-  toulouse:    { homme: 415_000,    femme: 435_000    },
-  bordeaux:    { homme: 370_000,    femme: 390_000    },
-  nantes:      { homme: 295_000,    femme: 315_000    },
-  lille:       { homme: 350_000,    femme: 370_000    },
-  nice:        { homme: 178_000,    femme: 192_000    },
-  strasbourg:  { homme: 237_000,    femme: 253_000    },
+  france:      { homme: 19_500_000, femme: 20_600_000 }, // INSEE RP 2021 — 18-64 ans
+  paris:       { homme: 3_600_000,  femme: 3_900_000  }, // Île-de-France 18-64 — INSEE 2021
+  lyon:        { homme: 400_000,    femme: 430_000    }, // Métropole Lyon 18-64 — INSEE 2021
+  marseille:   { homme: 540_000,    femme: 560_000    }, // Aix-Marseille-Prov. 18-64
+  toulouse:    { homme: 415_000,    femme: 435_000    }, // Toulouse aire att. 18-64
+  bordeaux:    { homme: 370_000,    femme: 390_000    }, // Bordeaux métro 18-64
+  nantes:      { homme: 295_000,    femme: 315_000    }, // Nantes métro 18-64
+  lille:       { homme: 350_000,    femme: 370_000    }, // Métropole Lille 18-64
+  nice:        { homme: 178_000,    femme: 192_000    }, // Nice Côte d'Azur 18-64
+  strasbourg:  { homme: 145_000,    femme: 155_000    }, // Eurométropole Stras. 18-64
 };
 
 export function getPopulationVille(ville: Ville, genre: Genre): number {

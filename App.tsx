@@ -32,6 +32,7 @@ import { ResultCard, formatPourcentage } from './src/components/ResultCard';
 import { SourcesPanel } from './src/components/SourcesPanel';
 import { HistoriquePanel } from './src/components/HistoriquePanel';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { AdBanner } from './src/components/AdBanner';
 import { calculerResultat } from './src/services/calculator';
 import { saveSearch, getHistory } from './src/services/history';
 
@@ -390,6 +391,8 @@ function AppContent() {
                     mode={isProfilMode ? 'profil' : 'recherche'}
                     shareText={shareText}
                   />
+                  {/* ── Publicité après résultat ── */}
+                  <AdBanner placement="afterResult" />
                 </Animated.View>
               )}
             </>
@@ -506,11 +509,16 @@ function AppContent() {
 
           {/* ══ HISTORIQUE ══ */}
           {mode === 'historique' && (
-            <HistoriquePanel
-              history={history}
-              onRestore={handleRestoreHistory}
-              onHistoryChange={refreshHistory}
-            />
+            <>
+              <HistoriquePanel
+                history={history}
+                onRestore={handleRestoreHistory}
+                onHistoryChange={refreshHistory}
+              />
+              {history.length > 0 && (
+                <AdBanner placement="inHistorique" />
+              )}
+            </>
           )}
 
           <View style={styles.spacer} />
