@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Share } from 'react-native';
-import { ResultatCalcul, Ville } from '../types';
+import { ResultatCalcul, Ville, TrancheRarete } from '../types';
 import { VILLE_LABELS } from '../constants/labels';
 import { C, S } from '../constants/theme';
 
@@ -50,6 +50,17 @@ function getBarColor(p: number): string {
   if (p > 10) return C.yellow;
   return C.red;
 }
+
+const TRANCHE_CONFIG: Record<TrancheRarete, { emoji: string; label: string; color: string; bgColor: string }> = {
+  commun:          { emoji: '🟢', label: 'Commun',          color: C.green,   bgColor: C.greenLight },
+  accessible:      { emoji: '👍', label: 'Accessible',      color: C.green,   bgColor: C.greenLight },
+  selectif:        { emoji: '🔍', label: 'Sélectif',        color: C.yellow,  bgColor: C.yellowLight },
+  rare:            { emoji: '💎', label: 'Rare',             color: C.orange,  bgColor: C.orangeLight },
+  licorne:         { emoji: '🦄', label: 'Licorne',          color: C.indigo,  bgColor: C.indigoLight },
+  legendaire:      { emoji: '🐉', label: 'Légendaire',       color: C.red,     bgColor: C.redLight },
+  extraterrestre:  { emoji: '👽', label: 'Extraterrestre',   color: C.redDark, bgColor: C.redLight },
+  hors_galaxie:    { emoji: '🪐', label: 'Hors galaxie',     color: C.redDark, bgColor: C.redLight },
+};
 
 async function doShare(text: string, setCopied: (v: boolean) => void) {
   if (Platform.OS !== 'web') {
@@ -135,6 +146,39 @@ export function ResultCard({
       >
         <Text style={styles.countNumber}>≈ {formatNombre(nombre)}</Text>
         <Text style={styles.countLabel}>personnes</Text>
+      </View>
+
+      {/* Tranche de rareté */}
+      {resultat.tranche && (
+        <View style={styles.trancheSection}>
+          <Text style={styles.trancheSectionTitle}>NIVEAU DE RARETÉ</Text>
+          <View style={[styles.trancheBadge, { backgroundColor: TRANCHE_CONFIG[resultat.tranche].bgColor }]}>
+            <Text style={styles.trancheEmoji}>{TRANCHE_CONFIG[resultat.tranche].emoji}</Text>
+            <Text style={[styles.trancheLabel, { color: TRANCHE_CONFIG[resultat.tranche].color }]}>
+              {TRANCHE_CONFIG[resultat.tranche].label}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Répartition Homme / Femme */}
+      <View style={styles.genderSection}>
+        <Text style={styles.genderSectionTitle}>PROBABILITÉ PAR GENRE</Text>
+        <View style={styles.genderRow}>
+          <View style={styles.genderCard}>
+            <Text style={styles.genderEmoji}>👨</Text>
+            <Text style={styles.genderPct}>{formatPourcentage(resultat.pourcentageHomme)}</Text>
+            <Text style={styles.genderCount}>≈ {formatNombre(resultat.nombreHomme)}</Text>
+            <Text style={styles.genderLabel}>hommes</Text>
+          </View>
+          <View style={styles.genderDivider} />
+          <View style={styles.genderCard}>
+            <Text style={styles.genderEmoji}>👩</Text>
+            <Text style={styles.genderPct}>{formatPourcentage(resultat.pourcentageFemme)}</Text>
+            <Text style={styles.genderCount}>≈ {formatNombre(resultat.nombreFemme)}</Text>
+            <Text style={styles.genderLabel}>femmes</Text>
+          </View>
+        </View>
       </View>
 
       {/* Détail par critère */}
@@ -235,6 +279,66 @@ const styles = StyleSheet.create({
   },
   countNumber: { fontSize: 24, fontWeight: '900', color: C.text },
   countLabel: { fontSize: 14, color: C.textSecondary, fontWeight: '500' },
+  trancheSection: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  trancheSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  trancheBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: C.rFull,
+    gap: 8,
+  },
+  trancheEmoji: { fontSize: 22 },
+  trancheLabel: { fontSize: 18, fontWeight: '800' },
+  genderSection: {
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  genderSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  genderRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 0,
+  },
+  genderCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  genderDivider: {
+    width: 1,
+    backgroundColor: C.border,
+    alignSelf: 'stretch',
+    marginVertical: 4,
+  },
+  genderEmoji: { fontSize: 28, marginBottom: 4 },
+  genderPct: { fontSize: 20, fontWeight: '900', color: C.text },
+  genderCount: { fontSize: 13, fontWeight: '600', color: C.textSecondary, marginTop: 2 },
+  genderLabel: { fontSize: 12, color: C.textTertiary, fontWeight: '500', marginTop: 2 },
   details: {
     borderTopWidth: 1,
     borderTopColor: C.border,

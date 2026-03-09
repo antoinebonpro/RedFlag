@@ -71,6 +71,9 @@ function stateToSelection(c: CriteriaState): CriteriaSelection {
     enfants: c.enfants,
     logement: c.logement,
     animaux: c.animaux,
+    alcool: c.alcool,
+    tatouage: c.tatouage,
+    vehicule: c.vehicule,
   };
 }
 
@@ -78,6 +81,7 @@ function countCriteria(c: CriteriaState): number {
   return [
     c.ageRange, c.tailleRange, c.diplomeRange, c.cheveux, c.yeux, c.salaireRange,
     c.fumeur, c.situation, c.sport, c.enfants, c.logement, c.animaux,
+    c.alcool, c.tatouage, c.vehicule,
   ].filter((v) => v !== null).length;
 }
 

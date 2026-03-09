@@ -26,6 +26,9 @@ export interface CriteriaState {
   enfants: Enfants | null;
   logement: Logement[] | null;
   animaux: Animaux[] | null;
+  alcool: Alcool | null;
+  tatouage: Tatouage | null;
+  vehicule: Vehicule[] | null;
 }
 
 export interface CriteriaSelection {
@@ -42,6 +45,9 @@ export interface CriteriaSelection {
   enfants: Enfants | null;
   logement: Logement[] | null;
   animaux: Animaux[] | null;
+  alcool: Alcool | null;
+  tatouage: Tatouage | null;
+  vehicule: Vehicule[] | null;
 }
 
 export type TrancheAge = '18_24' | '25_34' | '35_44' | '45_54' | '55_64';
@@ -70,11 +76,29 @@ export type FrequenceSport = 'jamais' | 'occasionnel' | 'regulier' | 'intensif';
 export type Enfants = 'aucun' | 'en_a';
 export type Logement = 'locataire' | 'proprietaire' | 'chez_parents' | 'colocation';
 export type Animaux = 'chien' | 'chat' | 'aucun';
+export type Alcool = 'jamais' | 'occasionnel' | 'regulier';
+export type Tatouage = 'aucun' | 'en_a';
+export type Vehicule = 'sans_permis' | 'permis_sans_vehicule' | 'avec_vehicule';
+
+export type TrancheRarete =
+  | 'commun'
+  | 'accessible'
+  | 'selectif'
+  | 'rare'
+  | 'licorne'
+  | 'legendaire'
+  | 'extraterrestre'
+  | 'hors_galaxie';
 
 export interface ResultatCalcul {
   pourcentage: number;
   nombre: number;
   details: DetailCritere[];
+  pourcentageHomme: number;
+  pourcentageFemme: number;
+  nombreHomme: number;
+  nombreFemme: number;
+  tranche: TrancheRarete;
 }
 
 export interface DetailCritere {
@@ -115,4 +139,7 @@ export const defaultCriteria = (genre: Genre = 'homme'): CriteriaState => ({
   enfants: null,
   logement: null,
   animaux: null,
+  alcool: null,
+  tatouage: null,
+  vehicule: null,
 });

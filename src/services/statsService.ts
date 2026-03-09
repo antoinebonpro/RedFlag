@@ -10,6 +10,9 @@ import {
   Enfants,
   Logement,
   Animaux,
+  Alcool,
+  Tatouage,
+  Vehicule,
   Ville,
 } from '../types';
 
@@ -340,4 +343,67 @@ const ANIMAUX_DISTRIBUTION: Record<Genre, Record<Animaux, number>> = {
 
 export function getProbabiliteAnimaux(genre: Genre, animaux: Animaux): number {
   return ANIMAUX_DISTRIBUTION[genre][animaux];
+}
+
+// ============================================================
+//  ALCOOL — SPF Baromètre santé 2023
+// ============================================================
+
+const ALCOOL_DISTRIBUTION: Record<Genre, Record<Alcool, number>> = {
+  homme: {
+    jamais:      0.15,
+    occasionnel: 0.55,
+    regulier:    0.30,
+  },
+  femme: {
+    jamais:      0.27,
+    occasionnel: 0.56,
+    regulier:    0.17,
+  },
+};
+
+export function getProbabiliteAlcool(genre: Genre, alcool: Alcool): number {
+  return ALCOOL_DISTRIBUTION[genre][alcool];
+}
+
+// ============================================================
+//  TATOUAGE — IFOP 2023 (18-64 ans)
+//  ~33% des 18-35 ans, ~18% global adulte
+// ============================================================
+
+const TATOUAGE_DISTRIBUTION: Record<Genre, Record<Tatouage, number>> = {
+  homme: {
+    aucun: 0.80,
+    en_a:  0.20,
+  },
+  femme: {
+    aucun: 0.74,
+    en_a:  0.26,
+  },
+};
+
+export function getProbabiliteTatouage(genre: Genre, tatouage: Tatouage): number {
+  return TATOUAGE_DISTRIBUTION[genre][tatouage];
+}
+
+// ============================================================
+//  PERMIS / VÉHICULE — SDES / INSEE 2022
+//  81% des adultes ont le permis, 77% ont un véhicule
+// ============================================================
+
+const VEHICULE_DISTRIBUTION: Record<Genre, Record<Vehicule, number>> = {
+  homme: {
+    sans_permis:          0.12,
+    permis_sans_vehicule: 0.07,
+    avec_vehicule:        0.81,
+  },
+  femme: {
+    sans_permis:          0.20,
+    permis_sans_vehicule: 0.10,
+    avec_vehicule:        0.70,
+  },
+};
+
+export function getProbabiliteVehicule(genre: Genre, vehicule: Vehicule): number {
+  return VEHICULE_DISTRIBUTION[genre][vehicule];
 }

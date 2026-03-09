@@ -9,6 +9,9 @@ import {
   Enfants,
   Logement,
   Animaux,
+  Alcool,
+  Tatouage,
+  Vehicule,
   Ville,
 } from '../types';
 
@@ -96,6 +99,23 @@ export const ANIMAUX_LABELS: Record<Animaux, string> = {
   aucun: 'Sans animal',
 };
 
+export const ALCOOL_LABELS: Record<Alcool, string> = {
+  jamais: 'Jamais',
+  occasionnel: 'Occasionnel',
+  regulier: 'Régulier',
+};
+
+export const TATOUAGE_LABELS: Record<Tatouage, string> = {
+  aucun: 'Sans tatouage',
+  en_a: 'Tatoué(e)',
+};
+
+export const VEHICULE_LABELS: Record<Vehicule, string> = {
+  sans_permis: 'Sans permis',
+  permis_sans_vehicule: 'Permis sans véhicule',
+  avec_vehicule: 'Avec véhicule',
+};
+
 export const VILLE_LABELS: Record<Ville, string> = {
   france: '🇫🇷 France entière',
   paris: '🗼 Paris',
@@ -110,7 +130,9 @@ export const VILLE_LABELS: Record<Ville, string> = {
 };
 
 export const TRANCHES_TAILLE = [
-  { label: '< 160 cm', min: 0, max: 159 },
+  { label: '< 150 cm', min: 0, max: 149 },
+  { label: '150–155', min: 150, max: 155 },
+  { label: '155–160', min: 155, max: 160 },
   { label: '160–165', min: 160, max: 165 },
   { label: '165–170', min: 165, max: 170 },
   { label: '170–175', min: 170, max: 175 },

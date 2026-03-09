@@ -10,6 +10,9 @@ import {
   Enfants,
   Logement,
   Animaux,
+  Alcool,
+  Tatouage,
+  Vehicule,
   Genre,
 } from '../types';
 import {
@@ -25,6 +28,9 @@ import {
   ENFANTS_LABELS,
   LOGEMENT_LABELS,
   ANIMAUX_LABELS,
+  ALCOOL_LABELS,
+  TATOUAGE_LABELS,
+  VEHICULE_LABELS,
   TRANCHES_TAILLE,
   TRANCHES_SALAIRE,
 } from '../constants/labels';
@@ -56,6 +62,9 @@ const SPORT_OPTIONS    = toOpts(SPORT_LABELS);
 const ENFANTS_OPTIONS  = toOpts(ENFANTS_LABELS);
 const LOGEMENT_OPTIONS = toOpts(LOGEMENT_LABELS);
 const ANIMAUX_OPTIONS  = toOpts(ANIMAUX_LABELS);
+const ALCOOL_OPTIONS   = toOpts(ALCOOL_LABELS);
+const TATOUAGE_OPTIONS = toOpts(TATOUAGE_LABELS);
+const VEHICULE_OPTIONS = toOpts(VEHICULE_LABELS);
 
 // ── rangeLabel helpers ───────────────────────────────────────────
 
@@ -183,6 +192,9 @@ export function CriteriaForm({
             criteria.enfants,
             criteria.logement,
             criteria.animaux,
+            criteria.alcool,
+            criteria.tatouage,
+            criteria.vehicule,
           )}
           defaultOpen={defaultOpenAll}
         >
@@ -226,6 +238,27 @@ export function CriteriaForm({
               options={ANIMAUX_OPTIONS}
               selected={criteria.animaux}
               onSelect={(v) => onChange({ animaux: v as Animaux[] | null })}
+            />
+          </CriteriaBlock>
+          <CriteriaBlock label="Alcool">
+            <ChipSelector
+              options={ALCOOL_OPTIONS}
+              selected={criteria.alcool}
+              onSelect={(v: Alcool | null) => onChange({ alcool: v })}
+            />
+          </CriteriaBlock>
+          <CriteriaBlock label="Tatouage">
+            <ChipSelector
+              options={TATOUAGE_OPTIONS}
+              selected={criteria.tatouage}
+              onSelect={(v: Tatouage | null) => onChange({ tatouage: v })}
+            />
+          </CriteriaBlock>
+          <CriteriaBlock label="Véhicule / Permis">
+            <MultiChipSelector
+              options={VEHICULE_OPTIONS}
+              selected={criteria.vehicule}
+              onSelect={(v) => onChange({ vehicule: v as Vehicule[] | null })}
             />
           </CriteriaBlock>
         </Section>

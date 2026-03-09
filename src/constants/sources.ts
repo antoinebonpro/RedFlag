@@ -92,4 +92,25 @@ export const SOURCES: SourceStat[] = [
     url: 'https://www.facco.fr/chiffres-cles/',
     note: 'Environ 49% des foyers français possèdent un animal. Chats (15,1M) et chiens (7,5M) sont les plus répandus.',
   },
+  {
+    critere: 'Alcool',
+    source: 'Santé publique France — Baromètre santé',
+    annee: '2023',
+    url: 'https://www.santepubliquefrance.fr/',
+    note: 'Consommation régulière (≥1 verre/semaine) : hommes 30%, femmes 17%. Jamais : hommes 15%, femmes 27%.',
+  },
+  {
+    critere: 'Tatouage',
+    source: 'IFOP — Enquête sur les tatouages',
+    annee: '2023',
+    url: 'https://www.ifop.com/',
+    note: 'Environ 23% des adultes français ont au moins un tatouage. Plus fréquent chez les femmes (26%) que les hommes (20%).',
+  },
+  {
+    critere: 'Permis / Véhicule',
+    source: 'SDES — Enquête mobilité des personnes',
+    annee: '2022',
+    url: 'https://www.statistiques.developpement-durable.gouv.fr/',
+    note: 'Environ 81% des adultes ont le permis B. Hommes : 88% permis, 81% véhicule. Femmes : 80% permis, 70% véhicule.',
+  },
 ];
