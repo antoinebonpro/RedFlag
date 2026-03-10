@@ -6,6 +6,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { C } from '../constants/theme';
 import { ADS_CONFIG } from '../config/ads';
 
@@ -15,20 +16,54 @@ interface AdBannerProps {
   placement: Placement;
 }
 
+// ─── Helper : récupère l'Ad Unit ID selon la plateforme et le placement ──────
+
+function getAdUnitId(placement: Placement): string {
+  if (__DEV__) {
+    // En développement, toujours utiliser les IDs de test
+    return TestIds.ADAPTIVE_BANNER;
+  }
+  return ADS_CONFIG.admob.bannerAdUnitId[placement].android;
+}
+
 // ─── Export principal ─────────────────────────────────────────────────────────
 
 export function AdBanner({ placement }: AdBannerProps) {
+  // Pub réelle AdMob (mobile natif)
+  if (Platform.OS !== 'web' && ADS_CONFIG.enabled) {
+    return <MobileAdMob placement={placement} />;
+  }
+
   // Pub réelle AdSense (web uniquement)
   if (Platform.OS === 'web' && ADS_CONFIG.enabled) {
     return <WebAdSense slotId={ADS_CONFIG.adsense.slots[placement]} />;
   }
 
-  // Placeholder visible (dev + native)
+  // Placeholder visible (dev)
   if (ADS_CONFIG.showPlaceholder) {
     return <AdPlaceholder />;
   }
 
   return null;
+}
+
+// ─── Google AdMob (mobile natif) ──────────────────────────────────────────────
+
+function MobileAdMob({ placement }: { placement: Placement }) {
+  const adUnitId = getAdUnitId(placement);
+
+  return (
+    <View style={styles.admobContainer}>
+      <Text style={styles.adLabel}>Publicité</Text>
+      <BannerAd
+        unitId={adUnitId}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        requestOptions={{
+          requestNonPersonalizedAdsOnly: true,
+        }}
+      />
+    </View>
+  );
 }
 
 // ─── Google AdSense (web) ─────────────────────────────────────────────────────
@@ -113,6 +148,11 @@ const styles = StyleSheet.create({
   },
   adsenseSlot: {
     minHeight: 90,
+  },
+  // AdMob mobile
+  admobContainer: {
+    paddingVertical: 4,
+    alignItems: 'center',
   },
   adLabel: {
     fontSize: 9,

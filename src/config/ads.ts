@@ -14,30 +14,33 @@
 
 export const ADS_CONFIG = {
   // ── Activer / désactiver toutes les publicités ──────────────────────────────
-  enabled: false, // ← mettre true quand les IDs sont configurés
+  enabled: true,
 
   // ── Google AdSense (web) ────────────────────────────────────────────────────
   adsense: {
-    publisherId: 'ca-pub-XXXXXXXXXXXXXXXX', // ← Ton Publisher ID AdSense
+    publisherId: 'ca-pub-5590126308756985',
     slots: {
       // Bannière affichée après les résultats de calcul
-      afterResult:  'XXXXXXXXXX',
+      afterResult:  'XXXXXXXXXX', // ← Remplace par ton slot AdSense
       // Bannière affichée dans l'onglet Historique
-      inHistorique: 'XXXXXXXXXX',
+      inHistorique: 'XXXXXXXXXX', // ← Remplace par ton slot AdSense
     },
   },
 
   // ── Google AdMob (mobile natif) ─────────────────────────────────────────────
-  // Nécessite un build natif (expo run:ios / expo run:android)
   admob: {
-    publisherId: 'ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX', // ← Ton App ID AdMob
+    appId: 'ca-app-pub-5590126308756985~7687756310',
     bannerAdUnitId: {
-      ios:     'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
-      android: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+      afterResult: {
+        android: 'ca-app-pub-5590126308756985/8820874584',
+      },
+      inHistorique: {
+        android: 'ca-app-pub-5590126308756985/4162939694',
+      },
     },
   },
 
   // ── Options d'affichage ─────────────────────────────────────────────────────
   // Afficher un placeholder visuel quand les vraies pubs ne sont pas configurées
-  showPlaceholder: true,
+  showPlaceholder: false,
 } as const;
