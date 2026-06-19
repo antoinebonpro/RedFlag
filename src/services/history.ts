@@ -9,25 +9,54 @@ const MAX_HISTORY = 20;
 
 async function readStorage(key: string): Promise<string | null> {
   if (Platform.OS === 'web') {
-    try { return localStorage.getItem(key); } catch { return null; }
+    try {
+      // FIX: guard typeof localStorage for SSR / embedded webviews
+      if (typeof localStorage === 'undefined') return null;
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
   }
-  return AsyncStorage.getItem(key);
+  try {
+    return await AsyncStorage.getItem(key);
+  } catch {
+    // FIX: catch AsyncStorage errors to prevent unhandled rejections
+    return null;
+  }
 }
 
 async function writeStorage(key: string, value: string): Promise<void> {
   if (Platform.OS === 'web') {
-    try { localStorage.setItem(key, value); } catch { /* quota exceeded */ }
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(key, value);
+    } catch {
+      /* quota exceeded */
+    }
     return;
   }
-  await AsyncStorage.setItem(key, value);
+  try {
+    await AsyncStorage.setItem(key, value);
+  } catch {
+    // FIX: silent fail on storage write error
+  }
 }
 
 async function removeStorage(key: string): Promise<void> {
   if (Platform.OS === 'web') {
-    try { localStorage.removeItem(key); } catch { /* ignore */ }
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
     return;
   }
-  await AsyncStorage.removeItem(key);
+  try {
+    await AsyncStorage.removeItem(key);
+  } catch {
+    // FIX: silent fail on storage remove error
+  }
 }
 
 // ─── Public API ───────────────────────────────────────────────
@@ -35,7 +64,11 @@ async function removeStorage(key: string): Promise<void> {
 export async function getHistory(): Promise<SavedSearch[]> {
   try {
     const raw = await readStorage(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as SavedSearch[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // FIX: defensive runtime validation to avoid crash if storage corrupted
+    if (!Array.isArray(parsed)) return [];
+    return parsed as SavedSearch[];
   } catch {
     return [];
   }
@@ -64,4 +97,13 @@ export async function deleteSearch(id: string): Promise<void> {
 
 export async function clearHistory(): Promise<void> {
   await removeStorage(STORAGE_KEY);
+}
+
+// FIX: RGPD / App Store 2023+ requirement — one-shot full data wipe.
+// Removes EVERY piece of user-generated local data from the device.
+// If new persisted keys are added to the app, append them to LOCAL_KEYS below.
+const LOCAL_KEYS = [STORAGE_KEY];
+
+export async function clearAllUserData(): Promise<void> {
+  await Promise.all(LOCAL_KEYS.map((k) => removeStorage(k)));
 }

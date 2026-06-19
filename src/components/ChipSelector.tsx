@@ -13,7 +13,7 @@ interface ChipSelectorProps<T extends string> {
   onSelect: (value: T | null) => void;
 }
 
-export function ChipSelector<T extends string>({
+function ChipSelectorInner<T extends string>({
   options,
   selected,
   onSelect,
@@ -28,8 +28,16 @@ export function ChipSelector<T extends string>({
             style={[styles.chip, isActive && styles.chipActive]}
             onPress={() => onSelect(isActive ? null : option.value)}
             activeOpacity={0.65}
+            accessible
+            accessibilityRole="radio"
+            accessibilityLabel={option.label}
+            accessibilityState={{ selected: isActive }}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
-            <Text style={[styles.text, isActive && styles.textActive]}>
+            <Text
+              style={[styles.text, isActive && styles.textActive]}
+              allowFontScaling
+            >
               {option.label}
             </Text>
           </TouchableOpacity>
@@ -39,6 +47,8 @@ export function ChipSelector<T extends string>({
   );
 }
 
+export const ChipSelector = React.memo(ChipSelectorInner) as typeof ChipSelectorInner;
+
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
@@ -46,8 +56,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: C.rFull,
     backgroundColor: C.bgChip,
   },

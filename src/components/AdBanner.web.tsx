@@ -1,37 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { C } from '../constants/theme';
 import { ADS_CONFIG } from '../config/ads';
-
-// Lazy native-only import: react-native-google-mobile-ads pulls native specs
-// that crash the web bundler. We require it only when running on iOS/Android.
-type AdMobModule = {
-  BannerAd: React.ComponentType<{
-    unitId: string;
-    size: string;
-    requestOptions?: { requestNonPersonalizedAdsOnly?: boolean };
-    onAdFailedToLoad?: (err: { message?: string } | undefined) => void;
-  }>;
-  BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: string };
-  TestIds: { ADAPTIVE_BANNER: string };
-};
-
-// Static import is fine here: this file is only bundled for native (ios/android).
-// The web bundle resolves AdBanner.web.tsx instead — see Metro platform extensions.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const AdMob: AdMobModule | null = (() => {
-  try {
-    return require('react-native-google-mobile-ads') as AdMobModule;
-  } catch {
-    return null;
-  }
-})();
 
 type Placement = 'afterResult' | 'inHistorique';
 
@@ -39,74 +9,18 @@ interface AdBannerProps {
   placement: Placement;
 }
 
-// ─── Helper : récupère l'Ad Unit ID selon la plateforme et le placement ──────
-
-function getAdUnitId(placement: Placement): string {
-  if (__DEV__ && AdMob) {
-    // En développement, toujours utiliser les IDs de test (évite ban AdMob)
-    return AdMob.TestIds.ADAPTIVE_BANNER;
-  }
-  const ids = ADS_CONFIG.admob.bannerAdUnitId[placement];
-  return Platform.OS === 'ios' ? ids.ios : ids.android;
-}
-
-// ─── Export principal ─────────────────────────────────────────────────────────
+// ─── Web entry point for AdBanner ─────────────────────────────────────────────
+// Metro auto-resolves this file on web (`.web.tsx`) so the native AdMob module
+// (which imports react-native internals) is never bundled for the browser.
 
 export function AdBanner({ placement }: AdBannerProps) {
-  if (Platform.OS !== 'web' && ADS_CONFIG.enabled) {
-    return <MobileAdMob placement={placement} />;
-  }
-
-  if (Platform.OS === 'web' && ADS_CONFIG.enabled) {
+  if (ADS_CONFIG.enabled) {
     return <WebAdSense slotId={ADS_CONFIG.adsense.slots[placement]} />;
   }
-
   if (ADS_CONFIG.showPlaceholder) {
     return <AdPlaceholder />;
   }
-
   return null;
-}
-
-// ─── Google AdMob (mobile natif) ──────────────────────────────────────────────
-
-function MobileAdMob({ placement }: { placement: Placement }) {
-  const [failed, setFailed] = useState(false);
-
-  if (!AdMob || failed) {
-    return null;
-  }
-
-  const adUnitId = getAdUnitId(placement);
-  const { BannerAd, BannerAdSize } = AdMob;
-
-  return (
-    <View
-      style={styles.admobContainer}
-      accessible
-      accessibilityLabel="Espace publicitaire"
-    >
-      <Text style={styles.adLabel} allowFontScaling>
-        Publicité
-      </Text>
-      <BannerAd
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        requestOptions={{
-          // RGPD : sans CMP UMP, on demande explicitement des pubs non personnalisées
-          // (à remplacer par AdsConsent.requestInfoUpdate() une fois la CMP intégrée)
-          requestNonPersonalizedAdsOnly: true,
-        }}
-        onAdFailedToLoad={(err) => {
-          if (__DEV__) {
-            // eslint-disable-next-line no-console
-            console.warn('[AdMob] failed to load:', err?.message);
-          }
-          setFailed(true);
-        }}
-      />
-    </View>
-  );
 }
 
 // ─── Google AdSense (web) ─────────────────────────────────────────────────────
@@ -122,8 +36,7 @@ function WebAdSense({ slotId }: { slotId: string }) {
     const container = document.getElementById(idRef.current);
     if (!container) return;
 
-    // Cleanup any previous insert (HMR / re-mount). replaceChildren() is the
-    // safe modern alternative to innerHTML='' (no parser invocation, no XSS surface).
+    // replaceChildren() — safer than innerHTML='' (no parser pass).
     container.replaceChildren();
 
     const ins = document.createElement('ins');
@@ -139,7 +52,7 @@ function WebAdSense({ slotId }: { slotId: string }) {
       // @ts-ignore — adsbygoogle est injecté par le script Google
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
-      // AdSense non chargé (bloqueur, etc.)
+      // AdSense bloqué (adblock, etc.)
     }
 
     return () => {
@@ -157,7 +70,7 @@ function WebAdSense({ slotId }: { slotId: string }) {
   );
 }
 
-// ─── Placeholder (dev / native) ───────────────────────────────────────────────
+// ─── Placeholder ──────────────────────────────────────────────────────────────
 
 function AdPlaceholder() {
   return (
@@ -195,18 +108,12 @@ function AdPlaceholder() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   adsenseContainer: {
     paddingVertical: 4,
   },
   adsenseSlot: {
     minHeight: 90,
-  },
-  admobContainer: {
-    paddingVertical: 4,
-    alignItems: 'center',
   },
   adLabel: {
     fontSize: 11,

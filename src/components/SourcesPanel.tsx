@@ -1,47 +1,91 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Linking,
+  Alert,
 } from 'react-native';
 import { SOURCES } from '../constants/sources';
 import { C } from '../constants/theme';
 
+async function openUrl(url: string) {
+  try {
+    const supported = await Linking.canOpenURL(url);
+    if (!supported) {
+      Alert.alert('Lien indisponible', 'Impossible d’ouvrir ce lien sur cet appareil.');
+      return;
+    }
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert('Lien indisponible', 'Une erreur est survenue lors de l’ouverture du lien.');
+  }
+}
+
 export function SourcesPanel() {
+  const handleOpen = useCallback((url: string) => {
+    openUrl(url);
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sources des données</Text>
-      <Text style={styles.intro}>
+      <Text
+        style={styles.title}
+        accessibilityRole="header"
+        allowFontScaling
+      >
+        Sources des données
+      </Text>
+      <Text style={styles.intro} allowFontScaling>
         Toutes les statistiques proviennent de sources publiques françaises.
         Le calcul multiplie les probabilités en supposant l'indépendance
         statistique des critères.
       </Text>
 
-      {SOURCES.map((s, i) => (
-        <View key={i} style={styles.card}>
+      {SOURCES.map((s) => (
+        <View key={`${s.critere}-${s.url}`} style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.critere}>{s.critere}</Text>
+            <Text style={styles.critere} allowFontScaling>
+              {s.critere}
+            </Text>
             <View style={styles.anneePill}>
-              <Text style={styles.annee}>{s.annee}</Text>
+              <Text style={styles.annee} allowFontScaling>
+                {s.annee}
+              </Text>
             </View>
           </View>
-          <Text style={styles.sourceName}>{s.source}</Text>
-          <Text style={styles.note}>{s.note}</Text>
+          <Text style={styles.sourceName} allowFontScaling>
+            {s.source}
+          </Text>
+          <Text style={styles.note} allowFontScaling>
+            {s.note}
+          </Text>
           <TouchableOpacity
-            onPress={() => Linking.openURL(s.url)}
+            onPress={() => handleOpen(s.url)}
             activeOpacity={0.6}
             style={styles.linkWrap}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessible
+            accessibilityRole="link"
+            accessibilityLabel={`Consulter la source ${s.source}, ouvre dans le navigateur`}
           >
-            <Text style={styles.link}>Consulter →</Text>
+            <Text style={styles.link} allowFontScaling>
+              Consulter →
+            </Text>
           </TouchableOpacity>
         </View>
       ))}
 
-      <View style={styles.disclaimer}>
-        <Text style={styles.disclaimerTitle}>⚠️ Avertissement</Text>
-        <Text style={styles.disclaimerText}>
+      <View
+        style={styles.disclaimer}
+        accessible
+        accessibilityLabel="Avertissement sur les données"
+      >
+        <Text style={styles.disclaimerTitle} allowFontScaling>
+          ⚠️ Avertissement
+        </Text>
+        <Text style={styles.disclaimerText} allowFontScaling>
           Ces données sont des estimations statistiques. Le calcul par
           indépendance est une simplification — en réalité certains critères
           sont corrélés (ex : diplôme et salaire). Les résultats sont
@@ -53,9 +97,7 @@ export function SourcesPanel() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-  },
+  container: { gap: 12 },
   title: {
     fontSize: 22,
     fontWeight: '800',
@@ -89,10 +131,10 @@ const styles = StyleSheet.create({
     backgroundColor: C.redLight,
     borderRadius: C.rFull,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   annee: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: C.red,
   },
@@ -102,16 +144,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   note: {
-    fontSize: 12,
+    fontSize: 13,
     color: C.textTertiary,
-    lineHeight: 17,
+    lineHeight: 18,
   },
   linkWrap: {
     alignSelf: 'flex-start',
-    marginTop: 2,
+    marginTop: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   link: {
-    fontSize: 13,
+    fontSize: 14,
     color: C.indigo,
     fontWeight: '600',
   },

@@ -13,7 +13,7 @@ interface MultiChipSelectorProps<T extends string> {
   onSelect: (values: T[] | null) => void;
 }
 
-export function MultiChipSelector<T extends string>({
+function MultiChipSelectorInner<T extends string>({
   options,
   selected,
   onSelect,
@@ -21,13 +21,10 @@ export function MultiChipSelector<T extends string>({
   function handlePress(value: T) {
     const current = selected ?? [];
     const exists = current.includes(value);
-
     if (exists) {
-      // Retirer la valeur
       const next = current.filter((v) => v !== value);
       onSelect(next.length > 0 ? next : null);
     } else {
-      // Ajouter la valeur
       onSelect([...current, value]);
     }
   }
@@ -42,11 +39,16 @@ export function MultiChipSelector<T extends string>({
             style={[styles.chip, isSelected && styles.chipSelected]}
             onPress={() => handlePress(option.value)}
             activeOpacity={0.65}
+            accessible
             accessibilityRole="checkbox"
             accessibilityLabel={option.label}
             accessibilityState={{ checked: isSelected }}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
-            <Text style={[styles.text, isSelected && styles.textSelected]}>
+            <Text
+              style={[styles.text, isSelected && styles.textSelected]}
+              allowFontScaling
+            >
               {option.label}
             </Text>
           </TouchableOpacity>
@@ -56,6 +58,10 @@ export function MultiChipSelector<T extends string>({
   );
 }
 
+export const MultiChipSelector = React.memo(
+  MultiChipSelectorInner,
+) as typeof MultiChipSelectorInner;
+
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
@@ -63,8 +69,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: C.rFull,
     backgroundColor: C.bgChip,
     borderWidth: 1,

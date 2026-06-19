@@ -8,9 +8,13 @@ interface GenreSelectorProps {
   onSelect: (genre: Genre) => void;
 }
 
-export function GenreSelector({ selected, onSelect }: GenreSelectorProps) {
+function GenreSelectorInner({ selected, onSelect }: GenreSelectorProps) {
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Choix du genre"
+    >
       <Tab
         emoji="👨"
         label="Un homme"
@@ -27,7 +31,9 @@ export function GenreSelector({ selected, onSelect }: GenreSelectorProps) {
   );
 }
 
-function Tab({
+export const GenreSelector = React.memo(GenreSelectorInner);
+
+const Tab = React.memo(function Tab({
   emoji,
   label,
   active,
@@ -43,13 +49,24 @@ function Tab({
       style={[styles.tab, active && styles.tabActive, active && S.subtleCard]}
       onPress={onPress}
       activeOpacity={0.7}
+      accessible
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
     >
-      <Text style={styles.emoji}>{emoji}</Text>
-      <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
+      <Text style={styles.emoji} allowFontScaling={false}>
+        {emoji}
+      </Text>
+      <Text
+        style={[styles.label, active && styles.labelActive]}
+        allowFontScaling
+      >
+        {label}
+      </Text>
       {active && <View style={styles.indicator} />}
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -62,6 +79,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: 14,
+    minHeight: 44,
     borderRadius: C.r12,
     gap: 4,
   },

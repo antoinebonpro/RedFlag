@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
 import { C } from '../constants/theme';
+
+// Enable LayoutAnimation on Android
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface SectionProps {
   icon: string;
@@ -16,7 +26,7 @@ interface SectionProps {
   defaultOpen?: boolean;
 }
 
-export function Section({
+function SectionInner({
   icon,
   title,
   badge,
@@ -25,10 +35,12 @@ export function Section({
 }: SectionProps) {
   const [open, setOpen] = useState(defaultOpen);
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setOpen(!open);
-  };
+    setOpen((o) => !o);
+  }, []);
+
+  const a11yLabel = badge ? `${title}, ${badge} sélectionné${Number(badge) > 1 ? 's' : ''}` : title;
 
   return (
     <View style={styles.container}>
@@ -36,22 +48,37 @@ export function Section({
         style={styles.header}
         onPress={toggle}
         activeOpacity={0.6}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabel}
+        accessibilityState={{ expanded: open }}
+        accessibilityHint={open ? 'Appuyer pour replier' : 'Appuyer pour déplier'}
       >
         <View style={styles.iconWrap}>
-          <Text style={styles.icon}>{icon}</Text>
+          <Text style={styles.icon} allowFontScaling={false}>
+            {icon}
+          </Text>
         </View>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title} allowFontScaling>
+          {title}
+        </Text>
         {badge && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge}</Text>
+            <Text style={styles.badgeText} allowFontScaling>
+              {badge}
+            </Text>
           </View>
         )}
-        <Text style={styles.chevron}>{open ? '−' : '+'}</Text>
+        <Text style={styles.chevron} allowFontScaling={false}>
+          {open ? '−' : '+'}
+        </Text>
       </TouchableOpacity>
       {open && <View style={styles.body}>{children}</View>}
     </View>
   );
 }
+
+export const Section = React.memo(SectionInner);
 
 const styles = StyleSheet.create({
   container: {
@@ -66,6 +93,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
+    minHeight: 44,
     gap: 12,
   },
   iconWrap: {
@@ -88,19 +116,19 @@ const styles = StyleSheet.create({
   badge: {
     backgroundColor: C.red,
     borderRadius: C.rFull,
-    minWidth: 22,
-    height: 22,
+    minWidth: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 7,
+    paddingHorizontal: 8,
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     color: C.textOnRed,
   },
   chevron: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '300',
     color: C.textTertiary,
     width: 24,

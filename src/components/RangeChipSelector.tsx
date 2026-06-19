@@ -104,8 +104,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: C.rFull,
     backgroundColor: C.bgChip,
     borderWidth: 1,
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
   },
   hint: {
     marginTop: 8,
-    fontSize: 11,
+    fontSize: 12,
     color: C.textTertiary,
     fontStyle: 'italic',
   },

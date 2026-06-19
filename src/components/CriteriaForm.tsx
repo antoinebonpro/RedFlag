@@ -89,7 +89,7 @@ interface CriteriaFormProps {
   defaultOpenAll?: boolean;
 }
 
-export function CriteriaForm({
+function CriteriaFormInner({
   criteria,
   onChange,
   isProfilMode = false,
@@ -267,7 +267,9 @@ export function CriteriaForm({
   );
 }
 
-function CriteriaBlock({
+export const CriteriaForm = React.memo(CriteriaFormInner);
+
+const CriteriaBlock = React.memo(function CriteriaBlock({
   label,
   children,
 }: {
@@ -276,11 +278,13 @@ function CriteriaBlock({
 }) {
   return (
     <View style={styles.criteriaBlock}>
-      <Text style={styles.criteriaLabel}>{label}</Text>
+      <Text style={styles.criteriaLabel} allowFontScaling>
+        {label}
+      </Text>
       {children}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

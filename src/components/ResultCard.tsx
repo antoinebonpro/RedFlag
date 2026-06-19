@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Share } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  Share,
+} from 'react-native';
 import { ResultatCalcul, Ville, TrancheRarete } from '../types';
 import { VILLE_LABELS } from '../constants/labels';
 import { C, S } from '../constants/theme';
@@ -30,19 +37,19 @@ type Verdict = { emoji: string; text: string; color: string; bgColor: string };
 
 function getVerdict(p: number, isProfil: boolean): Verdict {
   if (isProfil) {
-    if (p >= 30) return { emoji: '😊', text: 'Profil très courant',  color: C.green,  bgColor: C.greenLight };
-    if (p >= 10) return { emoji: '✨', text: 'Profil assez courant', color: C.green,  bgColor: C.greenLight };
-    if (p >= 3)  return { emoji: '🦋', text: 'Profil original',      color: C.yellow, bgColor: C.yellowLight };
-    if (p >= 0.5)return { emoji: '💎', text: 'Profil rare',          color: C.indigo, bgColor: C.indigoLight };
-    if (p >= 0.05)return{ emoji: '🌟', text: 'Profil très rare',     color: C.indigo, bgColor: C.indigoLight };
-    return           { emoji: '🪐', text: 'Profil unique en France', color: C.indigo, bgColor: C.indigoLight };
+    if (p >= 30) return { emoji: '😊', text: 'Profil très courant', color: C.green, bgColor: C.greenLight };
+    if (p >= 10) return { emoji: '✨', text: 'Profil assez courant', color: C.green, bgColor: C.greenLight };
+    if (p >= 3) return { emoji: '🦋', text: 'Profil original', color: C.yellow, bgColor: C.yellowLight };
+    if (p >= 0.5) return { emoji: '💎', text: 'Profil rare', color: C.indigo, bgColor: C.indigoLight };
+    if (p >= 0.05) return { emoji: '🌟', text: 'Profil très rare', color: C.indigo, bgColor: C.indigoLight };
+    return { emoji: '🪐', text: 'Profil unique en France', color: C.indigo, bgColor: C.indigoLight };
   }
-  if (p >= 30) return { emoji: '😎', text: 'Très courant',      color: C.green,   bgColor: C.greenLight };
-  if (p >= 10) return { emoji: '👍', text: 'Assez courant',     color: C.green,   bgColor: C.greenLight };
-  if (p >= 3)  return { emoji: '🤔', text: 'Pas si fréquent',   color: C.yellow,  bgColor: C.yellowLight };
-  if (p >= 0.5)return { emoji: '😬', text: 'Plutôt rare',       color: C.orange,  bgColor: C.orangeLight };
-  if (p >= 0.05)return { emoji: '🦄', text: 'Très exigeant',    color: C.red,     bgColor: C.redLight };
-  return           { emoji: '💀', text: 'Quasi impossible',     color: C.redDark, bgColor: C.redLight };
+  if (p >= 30) return { emoji: '😎', text: 'Très courant', color: C.green, bgColor: C.greenLight };
+  if (p >= 10) return { emoji: '👍', text: 'Assez courant', color: C.green, bgColor: C.greenLight };
+  if (p >= 3) return { emoji: '🤔', text: 'Pas si fréquent', color: C.yellow, bgColor: C.yellowLight };
+  if (p >= 0.5) return { emoji: '😬', text: 'Plutôt rare', color: C.orange, bgColor: C.orangeLight };
+  if (p >= 0.05) return { emoji: '🦄', text: 'Très exigeant', color: C.red, bgColor: C.redLight };
+  return { emoji: '💀', text: 'Quasi impossible', color: C.redDark, bgColor: C.redLight };
 }
 
 function getBarColor(p: number): string {
@@ -51,48 +58,21 @@ function getBarColor(p: number): string {
   return C.red;
 }
 
-const TRANCHE_CONFIG: Record<TrancheRarete, { emoji: string; label: string; color: string; bgColor: string }> = {
-  commun:          { emoji: '🟢', label: 'Commun',          color: C.green,   bgColor: C.greenLight },
-  accessible:      { emoji: '👍', label: 'Accessible',      color: C.green,   bgColor: C.greenLight },
-  selectif:        { emoji: '🔍', label: 'Sélectif',        color: C.yellow,  bgColor: C.yellowLight },
-  rare:            { emoji: '💎', label: 'Rare',             color: C.orange,  bgColor: C.orangeLight },
-  licorne:         { emoji: '🦄', label: 'Licorne',          color: C.indigo,  bgColor: C.indigoLight },
-  legendaire:      { emoji: '🐉', label: 'Légendaire',       color: C.red,     bgColor: C.redLight },
-  extraterrestre:  { emoji: '👽', label: 'Extraterrestre',   color: C.redDark, bgColor: C.redLight },
-  hors_galaxie:    { emoji: '🪐', label: 'Hors galaxie',     color: C.redDark, bgColor: C.redLight },
+const TRANCHE_CONFIG: Record<
+  TrancheRarete,
+  { emoji: string; label: string; color: string; bgColor: string }
+> = {
+  commun: { emoji: '🟢', label: 'Commun', color: C.green, bgColor: C.greenLight },
+  accessible: { emoji: '👍', label: 'Accessible', color: C.green, bgColor: C.greenLight },
+  selectif: { emoji: '🔍', label: 'Sélectif', color: C.yellow, bgColor: C.yellowLight },
+  rare: { emoji: '💎', label: 'Rare', color: C.orange, bgColor: C.orangeLight },
+  licorne: { emoji: '🦄', label: 'Licorne', color: C.indigo, bgColor: C.indigoLight },
+  legendaire: { emoji: '🐉', label: 'Légendaire', color: C.red, bgColor: C.redLight },
+  extraterrestre: { emoji: '👽', label: 'Extraterrestre', color: C.redDark, bgColor: C.redLight },
+  hors_galaxie: { emoji: '🪐', label: 'Hors galaxie', color: C.redDark, bgColor: C.redLight },
 };
 
-async function doShare(text: string, setCopied: (v: boolean) => void) {
-  if (Platform.OS !== 'web') {
-    // Native: use React Native Share sheet
-    try {
-      await Share.share({ message: text });
-    } catch {
-      // User cancelled — no feedback needed
-    }
-    return;
-  }
-  // Web: try Web Share API, fall back to clipboard
-  if (typeof navigator !== 'undefined' && navigator.share) {
-    try {
-      await navigator.share({ text });
-      return;
-    } catch {
-      // Cancelled or unsupported — fall through
-    }
-  }
-  if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable (non-HTTPS, etc.)
-    }
-  }
-}
-
-export function ResultCard({
+function ResultCardInner({
   resultat,
   genre,
   ville = 'france',
@@ -100,61 +80,132 @@ export function ResultCard({
   shareText,
 }: ResultCardProps) {
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup any pending timer on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
   const { pourcentage, nombre, details } = resultat;
   const genreLabel = genre === 'homme' ? 'hommes' : 'femmes';
   const isProfil = mode === 'profil';
-  const verdict = getVerdict(pourcentage, isProfil);
-  const villeLabel =
-    ville === 'france'
-      ? 'en France'
-      : `à ${VILLE_LABELS[ville].replace(/^[^\s]+\s/, '')}`;
+  const verdict = useMemo(() => getVerdict(pourcentage, isProfil), [pourcentage, isProfil]);
+
+  const villeLabel = useMemo(
+    () =>
+      ville === 'france'
+        ? 'en France'
+        : `à ${VILLE_LABELS[ville].replace(/^[^\s]+\s/, '')}`,
+    [ville],
+  );
 
   const subtitleText = isProfil
     ? `des ${genreLabel} ${villeLabel} te ressemblent`
     : `des ${genreLabel} ${villeLabel}`;
 
-  const defaultShareText =
-    `🚩 RedFlag\n` +
-    `${isProfil ? 'Mon profil' : 'Mes critères'} : ${details.map((d) => d.label).join(', ')}\n` +
-    `→ ${formatPourcentage(pourcentage)} des ${genreLabel} ${villeLabel} ${verdict.emoji}`;
+  const defaultShareText = useMemo(
+    () =>
+      `🚩 RedFlag\n` +
+        `${isProfil ? 'Mon profil' : 'Mes critères'} : ${details.map((d) => d.label).join(', ')}\n` +
+        `→ ${formatPourcentage(pourcentage)} des ${genreLabel} ${villeLabel} ${verdict.emoji}`,
+    [details, isProfil, pourcentage, genreLabel, villeLabel, verdict.emoji],
+  );
+
+  const handleShare = useCallback(async () => {
+    if (sharing) return;
+    setSharing(true);
+    const text = shareText ?? defaultShareText;
+    try {
+      if (Platform.OS !== 'web') {
+        await Share.share({ message: text });
+      } else if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ text });
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // user cancelled or feature unsupported — silent
+    } finally {
+      setSharing(false);
+    }
+  }, [sharing, shareText, defaultShareText]);
 
   return (
-    <View style={[styles.container, S.card]} accessibilityRole="summary">
+    <View
+      style={[styles.container, S.card]}
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={`${verdict.text}, ${formatPourcentage(pourcentage)} des ${genreLabel} ${villeLabel}, environ ${formatNombre(nombre)} personnes`}
+    >
       {/* Verdict */}
       <View style={styles.verdictSection}>
-        <Text style={styles.verdictEmoji} accessibilityLabel={verdict.text}>
+        <Text
+          style={styles.verdictEmoji}
+          allowFontScaling={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        >
           {verdict.emoji}
         </Text>
         <Text
           style={[styles.percentage, { color: verdict.color }]}
-          accessibilityLabel={`${formatPourcentage(pourcentage)} des ${genreLabel}`}
+          allowFontScaling
+          maxFontSizeMultiplier={1.4}
         >
           {formatPourcentage(pourcentage)}
         </Text>
-        <Text style={styles.subtitle}>{subtitleText}</Text>
+        <Text style={styles.subtitle} allowFontScaling>
+          {subtitleText}
+        </Text>
         <View style={[styles.verdictPill, { backgroundColor: verdict.bgColor }]}>
-          <Text style={[styles.verdictLabel, { color: verdict.color }]}>
+          <Text
+            style={[styles.verdictLabel, { color: verdict.color }]}
+            allowFontScaling
+          >
             {verdict.text}
           </Text>
         </View>
       </View>
 
       {/* Compteur */}
-      <View
-        style={styles.countBox}
-        accessibilityLabel={`Environ ${formatNombre(nombre)} personnes`}
-      >
-        <Text style={styles.countNumber}>≈ {formatNombre(nombre)}</Text>
-        <Text style={styles.countLabel}>personnes</Text>
+      <View style={styles.countBox}>
+        <Text style={styles.countNumber} allowFontScaling maxFontSizeMultiplier={1.3}>
+          ≈ {formatNombre(nombre)}
+        </Text>
+        <Text style={styles.countLabel} allowFontScaling>
+          personnes
+        </Text>
       </View>
 
       {/* Tranche de rareté */}
       {resultat.tranche && (
         <View style={styles.trancheSection}>
-          <Text style={styles.trancheSectionTitle}>NIVEAU DE RARETÉ</Text>
-          <View style={[styles.trancheBadge, { backgroundColor: TRANCHE_CONFIG[resultat.tranche].bgColor }]}>
-            <Text style={styles.trancheEmoji}>{TRANCHE_CONFIG[resultat.tranche].emoji}</Text>
-            <Text style={[styles.trancheLabel, { color: TRANCHE_CONFIG[resultat.tranche].color }]}>
+          <Text style={styles.trancheSectionTitle} allowFontScaling>
+            NIVEAU DE RARETÉ
+          </Text>
+          <View
+            style={[
+              styles.trancheBadge,
+              { backgroundColor: TRANCHE_CONFIG[resultat.tranche].bgColor },
+            ]}
+          >
+            <Text style={styles.trancheEmoji} allowFontScaling={false}>
+              {TRANCHE_CONFIG[resultat.tranche].emoji}
+            </Text>
+            <Text
+              style={[
+                styles.trancheLabel,
+                { color: TRANCHE_CONFIG[resultat.tranche].color },
+              ]}
+              allowFontScaling
+            >
               {TRANCHE_CONFIG[resultat.tranche].label}
             </Text>
           </View>
@@ -162,47 +213,97 @@ export function ResultCard({
       )}
 
       {/* Répartition Homme / Femme */}
-      <View style={styles.genderSection}>
-        <Text style={styles.genderSectionTitle}>PROBABILITÉ PAR GENRE</Text>
-        <View style={styles.genderRow}>
-          <View style={styles.genderCard}>
-            <Text style={styles.genderEmoji}>👨</Text>
-            <Text style={styles.genderPct}>{formatPourcentage(resultat.pourcentageHomme)}</Text>
-            <Text style={styles.genderCount}>≈ {formatNombre(resultat.nombreHomme)}</Text>
-            <Text style={styles.genderLabel}>hommes</Text>
+      {typeof resultat.pourcentageHomme === 'number' &&
+        typeof resultat.pourcentageFemme === 'number' && (
+          <View style={styles.genderSection}>
+            <Text style={styles.genderSectionTitle} allowFontScaling>
+              PROBABILITÉ PAR GENRE
+            </Text>
+            <View style={styles.genderRow}>
+              <View
+                style={styles.genderCard}
+                accessible
+                accessibilityLabel={`Hommes, ${formatPourcentage(resultat.pourcentageHomme)}, environ ${formatNombre(resultat.nombreHomme ?? 0)}`}
+              >
+                <Text style={styles.genderEmoji} allowFontScaling={false}>
+                  👨
+                </Text>
+                <Text style={styles.genderPct} allowFontScaling>
+                  {formatPourcentage(resultat.pourcentageHomme)}
+                </Text>
+                <Text style={styles.genderCount} allowFontScaling>
+                  ≈ {formatNombre(resultat.nombreHomme ?? 0)}
+                </Text>
+                <Text style={styles.genderLabel} allowFontScaling>
+                  hommes
+                </Text>
+              </View>
+              <View style={styles.genderDivider} />
+              <View
+                style={styles.genderCard}
+                accessible
+                accessibilityLabel={`Femmes, ${formatPourcentage(resultat.pourcentageFemme)}, environ ${formatNombre(resultat.nombreFemme ?? 0)}`}
+              >
+                <Text style={styles.genderEmoji} allowFontScaling={false}>
+                  👩
+                </Text>
+                <Text style={styles.genderPct} allowFontScaling>
+                  {formatPourcentage(resultat.pourcentageFemme)}
+                </Text>
+                <Text style={styles.genderCount} allowFontScaling>
+                  ≈ {formatNombre(resultat.nombreFemme ?? 0)}
+                </Text>
+                <Text style={styles.genderLabel} allowFontScaling>
+                  femmes
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.genderDivider} />
-          <View style={styles.genderCard}>
-            <Text style={styles.genderEmoji}>👩</Text>
-            <Text style={styles.genderPct}>{formatPourcentage(resultat.pourcentageFemme)}</Text>
-            <Text style={styles.genderCount}>≈ {formatNombre(resultat.nombreFemme)}</Text>
-            <Text style={styles.genderLabel}>femmes</Text>
-          </View>
-        </View>
-      </View>
+        )}
 
       {/* Détail par critère */}
       {details.length > 0 && (
         <View style={styles.details}>
-          <Text style={styles.detailsTitle}>
+          <Text style={styles.detailsTitle} allowFontScaling>
             {isProfil ? 'Tes traits' : 'Détail par critère'}
           </Text>
-          {details.map((d, i) => (
-            <View key={i} style={styles.row}>
+          {details.map((d) => (
+            <View
+              key={d.label}
+              style={styles.row}
+              accessible
+              accessibilityRole="progressbar"
+              accessibilityLabel={`${d.label}, ${d.pourcentage.toFixed(1).replace('.', ',')}%`}
+              accessibilityValue={{
+                min: 0,
+                max: 100,
+                now: Math.round(d.pourcentage),
+              }}
+            >
               <View style={styles.rowTop}>
                 <View style={styles.rowLabelWrap}>
                   {isProfil && d.isRedFlag && (
-                    <Text style={styles.redFlagIcon} accessibilityLabel="red flag">
+                    <Text
+                      style={styles.redFlagIcon}
+                      allowFontScaling={false}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
+                    >
                       🚩{' '}
                     </Text>
                   )}
-                  <Text style={styles.rowLabel}>{d.label}</Text>
+                  <Text
+                    style={styles.rowLabel}
+                    numberOfLines={2}
+                    allowFontScaling
+                  >
+                    {d.label}
+                  </Text>
                 </View>
-                <Text style={styles.rowValue}>
+                <Text style={styles.rowValue} allowFontScaling>
                   {d.pourcentage.toFixed(1).replace('.', ',')}%
                 </Text>
               </View>
-              {/* Flex-based bar — works on both web and native */}
               <View style={styles.barBg}>
                 <View
                   style={[
@@ -215,7 +316,9 @@ export function ResultCard({
                 />
                 <View style={{ flex: Math.max(0, 100 - d.pourcentage) }} />
               </View>
-              <Text style={styles.rowSource}>{d.source}</Text>
+              <Text style={styles.rowSource} allowFontScaling>
+                {d.source}
+              </Text>
             </View>
           ))}
         </View>
@@ -224,18 +327,23 @@ export function ResultCard({
       {/* Share */}
       <TouchableOpacity
         style={styles.shareBtn}
-        onPress={() => doShare(shareText ?? defaultShareText, setCopied)}
+        onPress={handleShare}
+        disabled={sharing}
         activeOpacity={0.7}
-        accessibilityLabel="Partager ce résultat"
+        accessible
         accessibilityRole="button"
+        accessibilityLabel="Partager ce résultat"
+        accessibilityState={{ disabled: sharing }}
       >
-        <Text style={styles.shareBtnText}>
-          {copied ? '✓ Copié !' : '🔗 Partager ce résultat'}
+        <Text style={styles.shareBtnText} allowFontScaling>
+          {copied ? '✓ Copié !' : sharing ? '…' : '🔗 Partager ce résultat'}
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+export const ResultCard = React.memo(ResultCardInner);
 
 const styles = StyleSheet.create({
   container: {
@@ -285,7 +393,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   trancheSectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: C.textTertiary,
     textTransform: 'uppercase',
@@ -310,7 +418,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   genderSectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: C.textTertiary,
     textTransform: 'uppercase',
@@ -337,8 +445,18 @@ const styles = StyleSheet.create({
   },
   genderEmoji: { fontSize: 28, marginBottom: 4 },
   genderPct: { fontSize: 20, fontWeight: '900', color: C.text },
-  genderCount: { fontSize: 13, fontWeight: '600', color: C.textSecondary, marginTop: 2 },
-  genderLabel: { fontSize: 12, color: C.textTertiary, fontWeight: '500', marginTop: 2 },
+  genderCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.textSecondary,
+    marginTop: 2,
+  },
+  genderLabel: {
+    fontSize: 12,
+    color: C.textTertiary,
+    fontWeight: '500',
+    marginTop: 2,
+  },
   details: {
     borderTopWidth: 1,
     borderTopColor: C.border,
@@ -373,12 +491,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   barFill: { height: '100%', borderRadius: 3 },
-  rowSource: { fontSize: 11, color: C.textTertiary, fontWeight: '500' },
+  rowSource: { fontSize: 12, color: C.textTertiary, fontWeight: '500' },
   shareBtn: {
     borderTopWidth: 1,
     borderTopColor: C.border,
     paddingVertical: 16,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   shareBtnText: { fontSize: 14, color: C.indigo, fontWeight: '700' },
 });

@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
+  TouchableOpacity,
   PanResponder,
   Animated,
   StyleSheet,
@@ -9,8 +10,9 @@ import {
 } from 'react-native';
 import { C } from '../constants/theme';
 
-const THUMB = 26;
+const THUMB = 28;
 const TRACK_H = 4;
+const HIT_SLOP = { top: 16, bottom: 16, left: 16, right: 16 };
 
 interface DualSliderProps {
   count: number;
@@ -38,7 +40,7 @@ export function DualSlider({
   const minStartRef = useRef(0);
   const maxStartRef = useRef(0);
 
-  // Always-fresh onRange ref (avoids stale closure)
+  // Always-fresh onRange ref
   const onRangeRef = useRef(onRange);
   onRangeRef.current = onRange;
 
@@ -74,7 +76,11 @@ export function DualSlider({
     maxX.setValue(hiP);
   }
 
-  function snapThumb(anim: Animated.Value, idx: number, posRef: React.MutableRefObject<number>) {
+  function snapThumb(
+    anim: Animated.Value,
+    idx: number,
+    posRef: React.MutableRefObject<number>,
+  ) {
     const target = idxToPos(idx);
     posRef.current = target;
     Animated.spring(anim, {
@@ -94,7 +100,7 @@ export function DualSlider({
     setLayoutDone(true);
   }
 
-  // Sync thumb positions when range prop changes externally (e.g. "Effacer tout")
+  // Sync thumb positions when range prop changes externally
   useEffect(() => {
     if (!layoutDone) return;
     syncToIdxs(range?.[0] ?? 0, range?.[1] ?? count - 1);
@@ -174,7 +180,36 @@ export function DualSlider({
 
   const isActive = range !== null;
 
-  // Cursor style for web (drag affordance)
+  // ── A11y handlers (VoiceOver / TalkBack adjustable) ───────────
+
+  const handleMinIncrement = useCallback(() => {
+    const next = Math.min(maxIdxRef.current, minIdxRef.current + 1);
+    if (next !== minIdxRef.current) {
+      onRangeRef.current([next, maxIdxRef.current]);
+    }
+  }, []);
+
+  const handleMinDecrement = useCallback(() => {
+    const next = Math.max(0, minIdxRef.current - 1);
+    if (next !== minIdxRef.current) {
+      onRangeRef.current([next, maxIdxRef.current]);
+    }
+  }, []);
+
+  const handleMaxIncrement = useCallback(() => {
+    const next = Math.min(count - 1, maxIdxRef.current + 1);
+    if (next !== maxIdxRef.current) {
+      onRangeRef.current([minIdxRef.current, next]);
+    }
+  }, [count]);
+
+  const handleMaxDecrement = useCallback(() => {
+    const next = Math.max(minIdxRef.current, maxIdxRef.current - 1);
+    if (next !== maxIdxRef.current) {
+      onRangeRef.current([minIdxRef.current, next]);
+    }
+  }, []);
+
   const thumbCursor =
     Platform.OS === 'web' ? ({ cursor: 'grab' } as object) : {};
 
@@ -185,19 +220,17 @@ export function DualSlider({
         style={styles.trackOuter}
         onLayout={(e) => handleLayout(e.nativeEvent.layout.width)}
       >
-        {/* Background track */}
         <View style={[styles.trackBg, isActive && styles.trackBgOn]} />
 
         {layoutDone && (
           <>
-            {/* Active fill between thumbs */}
             {isActive && (
               <Animated.View
                 pointerEvents="none"
                 style={[
                   styles.trackFill,
                   {
-                    // @ts-ignore — Animated.Value is valid for Animated.View style
+                    // @ts-ignore
                     left: Animated.add(minX, THUMB / 2),
                     width: Animated.subtract(maxX, minX),
                   },
@@ -207,6 +240,7 @@ export function DualSlider({
 
             {/* Min thumb */}
             <Animated.View
+              hitSlop={HIT_SLOP}
               style={[
                 styles.thumb,
                 isActive && styles.thumbOn,
@@ -214,6 +248,23 @@ export function DualSlider({
                 { left: minX },
                 thumbCursor,
               ]}
+              accessible
+              accessibilityRole="adjustable"
+              accessibilityLabel={`Valeur minimum, ${minLbl}`}
+              accessibilityValue={{
+                min: 0,
+                max: count - 1,
+                now: lo,
+                text: minLbl,
+              }}
+              accessibilityActions={[
+                { name: 'increment' },
+                { name: 'decrement' },
+              ]}
+              onAccessibilityAction={(e) => {
+                if (e.nativeEvent.actionName === 'increment') handleMinIncrement();
+                if (e.nativeEvent.actionName === 'decrement') handleMinDecrement();
+              }}
               {...minPan.panHandlers}
             >
               <View style={[styles.dot, isActive && styles.dotOn]} />
@@ -221,6 +272,7 @@ export function DualSlider({
 
             {/* Max thumb */}
             <Animated.View
+              hitSlop={HIT_SLOP}
               style={[
                 styles.thumb,
                 isActive && styles.thumbOn,
@@ -228,6 +280,23 @@ export function DualSlider({
                 { left: maxX },
                 thumbCursor,
               ]}
+              accessible
+              accessibilityRole="adjustable"
+              accessibilityLabel={`Valeur maximum, ${maxLbl}`}
+              accessibilityValue={{
+                min: 0,
+                max: count - 1,
+                now: hi,
+                text: maxLbl,
+              }}
+              accessibilityActions={[
+                { name: 'increment' },
+                { name: 'decrement' },
+              ]}
+              onAccessibilityAction={(e) => {
+                if (e.nativeEvent.actionName === 'increment') handleMaxIncrement();
+                if (e.nativeEvent.actionName === 'decrement') handleMaxDecrement();
+              }}
               {...maxPan.panHandlers}
             >
               <View style={[styles.dot, isActive && styles.dotOn]} />
@@ -238,22 +307,37 @@ export function DualSlider({
 
       {/* ── Edge labels ── */}
       <View style={styles.edgeRow}>
-        <Text style={styles.edgeLbl}>{labels[0]}</Text>
-        <Text style={styles.edgeLbl}>{labels[count - 1]}</Text>
+        <Text style={styles.edgeLbl} allowFontScaling>
+          {labels[0]}
+        </Text>
+        <Text style={styles.edgeLbl} allowFontScaling>
+          {labels[count - 1]}
+        </Text>
       </View>
 
       {/* ── Pill / hint ── */}
       {isActive ? (
         <View style={styles.pillRow}>
           <View style={styles.pill}>
-            <Text style={styles.pillTxt}>📏 {pillText}</Text>
+            <Text style={styles.pillTxt} allowFontScaling>
+              📏 {pillText}
+            </Text>
           </View>
-          <Text style={styles.clearBtn} onPress={() => onRange(null)}>
-            Effacer
-          </Text>
+          <TouchableOpacity
+            onPress={() => onRange(null)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Effacer la plage"
+            style={styles.clearBtnTouch}
+          >
+            <Text style={styles.clearBtn} allowFontScaling>
+              Effacer
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
-        <Text style={styles.hint}>
+        <Text style={styles.hint} allowFontScaling>
           Glisse les curseurs pour définir une plage
         </Text>
       )}
@@ -317,7 +401,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   edgeLbl: {
-    fontSize: 10,
+    fontSize: 12,
     color: C.textTertiary,
     fontWeight: '500',
   },
@@ -340,14 +424,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: C.red,
   },
+  clearBtnTouch: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
   clearBtn: {
-    fontSize: 12,
+    fontSize: 13,
     color: C.textTertiary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   hint: {
     marginTop: 4,
-    fontSize: 11,
+    fontSize: 12,
     color: C.textTertiary,
     fontStyle: 'italic',
   },
